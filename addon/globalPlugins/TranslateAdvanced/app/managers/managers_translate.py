@@ -23,6 +23,7 @@ from ..src_translations.src_libretranslate_original import TranslatorLibreTransl
 from ..src_translations.src_microsoft_api_free import TranslatorMicrosoftApiFree
 from ..src_translations.src_deepl_free import TranslatorDeepLFree
 from ..src_translations.src_openai_4o_api import TranslatorOpenAI
+from ..src_translations.src_gemini_api import TranslatorGemini # Gemini
 from ..src_translations.src_detect import DetectorDeIdioma
 from ..managers.managers_dict import LanguageDictionary
 
@@ -36,6 +37,7 @@ class GestorTranslate(
 	TranslatorLibreTranslate,
 	TranslatorMicrosoftApiFree,
 	TranslatorOpenAI,
+	TranslatorGemini, # Gemini
 ):
 	"""
 	Clase que gestiona la traducción de texto y el manejo del historial de traducción.
@@ -47,7 +49,8 @@ class GestorTranslate(
 		:param frame: El marco principal de la aplicación.
 		"""
 		super().__init__()
-		TranslatorOpenAI.__init__(self)  # Llama explícitamente al constructor de TranslatorOpenAI
+		TranslatorOpenAI.__init__(self, settings_manager=self.frame.gestor_settings) # OpenAI with settings_manager
+		TranslatorGemini.__init__(self) # Gemini
 		self.frame = frame
 		self.data_google = LanguageDictionary(self.frame.gestor_lang.obtener_idiomas("google"))
 
@@ -77,6 +80,8 @@ class GestorTranslate(
 			return self.frame.gestor_settings.choiceLangDestino_libretranslate
 		elif value == 7:
 			return self.frame.gestor_settings.choiceLangDestino_microsoft
+		elif value == 10: # Gemini
+			return self.frame.gestor_settings.choiceLangDestino_gemini
 
 	def get_api(self):
 		"""
@@ -122,6 +127,11 @@ class GestorTranslate(
 				return None, None
 			else:
 				return self.frame.gestor_apis.get_api("openai", self.frame.gestor_settings.api_openai)["key"], None
+		elif value == 10: # Gemini
+			if self.frame.gestor_settings.api_gemini is None:
+				return None, None
+			else:
+				return self.frame.gestor_apis.get_api("gemini", self.frame.gestor_settings.api_gemini)["key"], None
 
 	def procesar_listas(self, origen, destino):
 		"""
@@ -356,6 +366,18 @@ class GestorTranslate(
 						return text
 					prepared = text
 					translated = self.translate_openai(api_key, prepared, target_language=self.frame.gestor_settings.choiceLangDestino_openai)
+				elif id == 10: # Gemini
+					api_key, _ = self.get_api()
+					if api_key is None:
+						logHandler.log.error(_("No tiene ninguna API configurada para el servicio Gemini."))
+						return text
+					prepared = text
+					translated = self.translate_gemini(
+						api_key,
+						prepared,
+						target_language=self.frame.gestor_settings.choiceLangDestino_gemini,
+						source_language=self.frame.gestor_settings.choiceLangOrigen
+					)
 		except Exception as e:
 			msg = \
 _("""Error en la traducción.

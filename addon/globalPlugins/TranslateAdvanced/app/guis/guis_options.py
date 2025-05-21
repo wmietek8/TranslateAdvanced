@@ -40,7 +40,7 @@ class ConfigDialog(wx.Dialog):
 		self.api_manager = self.frame.gestor_apis
 		# Variable para rastrear el traductor seleccionado y su API por defecto
 		self.selected_service = None
-		self.default_api_index = {"deepL_free": self.frame.gestor_settings.api_deepl, "deepL_pro": self.frame.gestor_settings.api_deepl_pro, "libre_translate": self.frame.gestor_settings.api_libretranslate, "openai": self.frame.gestor_settings.api_openai}
+		self.default_api_index = {"deepL_free": self.frame.gestor_settings.api_deepl, "deepL_pro": self.frame.gestor_settings.api_deepl_pro, "libre_translate": self.frame.gestor_settings.api_libretranslate, "openai": self.frame.gestor_settings.api_openai, "gemini": self.frame.gestor_settings.api_gemini}
 		# Crear el Listbook
 		self.listbook = wx.Listbook(self, wx.ID_ANY)
 
@@ -99,6 +99,8 @@ class ConfigDialog(wx.Dialog):
 		self.SetHelp(self.listbook, _("Navega entre las diferentes secciones de configuración. Permite cambiar entre las configuraciones generales y las específicas del traductor."))
 		self.SetHelp(self.ok_button, _("Guarda los cambios y cierra el diálogo de configuración. Asegúrate de revisar todas las opciones antes de confirmar."))
 		self.SetHelp(self.cancel_button, _("Descarta los cambios y cierra el diálogo de configuración. Los cambios realizados no serán guardados."))
+		self.SetHelp(self.openai_prompt_label, _("Etiqueta para el campo de texto del prompt personalizado de OpenAI."))
+		self.SetHelp(self.openai_prompt_text, _("Define un prompt personalizado para las traducciones con OpenAI. Usa {target_language} para el idioma destino y {text_chunk} para el texto a traducir. Si se deja vacío, se usará el prompt por defecto."))
 
 		# Asegurar que los paneles del Listbook tengan ayuda específica
 		for i in range(self.listbook.GetPageCount()):
@@ -219,6 +221,14 @@ class ConfigDialog(wx.Dialog):
 		self.api_controls = (self.api_listbox, self.add_button, self.edit_button, self.delete_button, self.default_button)
 		self.show_api_controls(False)
 
+		# OpenAI Custom Prompt
+		self.openai_prompt_label = wx.StaticText(panel, label=_("Prompt personalizado para O&penAI:"))
+		sizer.Add(self.openai_prompt_label, 0, wx.ALL, 10)
+		self.openai_prompt_text = wx.TextCtrl(panel, style=wx.TE_MULTILINE, size=(-1, 100)) # Height of 100 as an example
+		sizer.Add(self.openai_prompt_text, 0, wx.EXPAND | wx.ALL, 10)
+		self.openai_prompt_label.Show(False)
+		self.openai_prompt_text.Show(False)
+
 		return panel
 
 	def init_bindings(self):
@@ -264,7 +274,7 @@ class ConfigDialog(wx.Dialog):
 		"""
 		self.api_listbox.Clear()
 		default_index = None
-		if self.selected_service and self.selected_service in ["deepL_free", "deepL_pro", "libre_translate", "openai"]:
+		if self.selected_service and self.selected_service in ["deepL_free", "deepL_pro", "libre_translate", "openai", "gemini"]:
 			apis = self.api_manager.get_apis(self.selected_service)
 			if apis:
 				for i, api in enumerate(apis):
@@ -286,6 +296,7 @@ class ConfigDialog(wx.Dialog):
 		self.frame.gestor_settings.api_deepl_pro = self.default_api_index["deepL_pro"]
 		self.frame.gestor_settings.api_libretranslate = self.default_api_index["libre_translate"]
 		self.frame.gestor_settings.api_openai = self.default_api_index["openai"]
+		self.frame.gestor_settings.api_gemini = self.default_api_index["gemini"]
 		self.frame.gestor_settings.guardaConfiguracion()
 
 	def actualizar_aceleradores(self, habilitar):
@@ -311,7 +322,7 @@ class ConfigDialog(wx.Dialog):
 
 		:param event: Evento de selección.
 		"""
-		if event.GetString() not in [_("Traductor DeepL (API Free *)"), _("Traductor DeepL (API Pro *)"), _("Traductor LibreTranslate (API *)"), _("Traductor OpenAI GPT4o-mini (API *)")]:
+		if event.GetString() not in [_("Traductor DeepL (API Free *)"), _("Traductor DeepL (API Pro *)"), _("Traductor LibreTranslate (API *)"), _("Traductor OpenAI GPT4o-mini (API *)"), _("Traductor Gemini (API *)")]:
 			self.show_api_controls(False)
 			self.actualizar_aceleradores(False)
 			return
@@ -324,6 +335,11 @@ class ConfigDialog(wx.Dialog):
 			self.show_api_controls(False)
 			self.actualizar_aceleradores(False)
 		self.update_api_list()
+		is_openai_selected = (self.selected_service == "openai")
+		self.openai_prompt_label.Show(is_openai_selected)
+		self.openai_prompt_text.Show(is_openai_selected)
+		panel = self.listbook.GetPage(1) # Assuming "Módulos de traducción" is the second page (index 1)
+		panel.Layout() # Refresh layout of the panel
 
 	def GetSelectionChoice(self):
 		"""
@@ -415,7 +431,7 @@ class ConfigDialog(wx.Dialog):
 		Inicializa la configuración del traductor online del diálogo.
 		"""
 		self.select_choice_by_value(self.frame.gestor_settings.choiceOnline)
-		if self.frame.gestor_settings.choiceOnline in [4, 5, 6, 9]:
+		if self.frame.gestor_settings.choiceOnline in [4, 5, 6, 9, 10]:
 			choice = self.translator_choice.GetStringSelection()
 			self.selected_service = self.frame.gestor_settings.service_map.get(choice)
 			if self.selected_service:
@@ -423,6 +439,17 @@ class ConfigDialog(wx.Dialog):
 				self.update_api_list()
 			else:
 				self.show_api_controls(False)
+
+		# Load and set OpenAI custom prompt
+		self.openai_prompt_text.SetValue(self.frame.gestor_settings.openai_custom_prompt or '') # Ensure it's not None
+		is_openai_selected_on_start = (self.selected_service == "openai")
+		self.openai_prompt_label.Show(is_openai_selected_on_start)
+		self.openai_prompt_text.Show(is_openai_selected_on_start)
+		# panel.Layout() might be needed here too if not called by other logic later in the method
+		# It's safer to call it:
+		page_panel = self.listbook.GetPage(1) # Get the "Módulos de traducción" panel
+		if page_panel: # Check if panel exists
+			 page_panel.Layout()
 
 	def on_add_api(self, event):
 		"""
@@ -576,6 +603,8 @@ class ConfigDialog(wx.Dialog):
 		self.frame.gestor_settings.api_deepl_pro = self.default_api_index["deepL_pro"]
 		self.frame.gestor_settings.api_libretranslate = self.default_api_index["libre_translate"]
 		self.frame.gestor_settings.api_openai = self.default_api_index["openai"]
+		self.frame.gestor_settings.api_gemini = self.default_api_index["gemini"]
+		self.frame.gestor_settings.openai_custom_prompt = self.openai_prompt_text.GetValue()
 
 		self.frame.gestor_settings.IS_WinON = False
 		self.frame.gestor_settings.guardaConfiguracion()

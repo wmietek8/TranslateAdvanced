@@ -62,6 +62,7 @@ class GestorSettings:
 		self.choiceLangDestino_google_def = None
 		self.choiceLangDestino_google_alt = None
 		self.choiceLangDestino_openai = None
+		self.choiceLangDestino_gemini = None # Gemini
 		self.guiLang_origen = None
 		self.guiLang_destino = None
 		self.chkCache = None
@@ -72,6 +73,8 @@ class GestorSettings:
 		self.api_libretranslate = None
 		self.api_libretranslate_url = None
 		self.api_openai = None
+		self.api_gemini = None # Gemini
+		self.openai_custom_prompt = None # OpenAI Custom Prompt
 		self.chkSound = True
 		self.snd_vol = None
 		self.snd_vel = None
@@ -89,6 +92,7 @@ class GestorSettings:
 			_("Traductor LibreTranslate (API *)"),
 			_("Traductor Microsoft Bing (API Free)"),
 			_("Traductor OpenAI GPT4o-mini (API *)"),
+			_("Traductor Gemini (API *)"), # Gemini
 		]
 		self.service_map_selection = {
 			_("Traductor Google (WEB 1)"): 0,
@@ -101,12 +105,14 @@ class GestorSettings:
 			_("Traductor Microsoft Bing (API Free)"): 7,
 			_("Traductor DeepL (Free)"): 8,
 			_("Traductor OpenAI GPT4o-mini (API *)"): 9,
+			_("Traductor Gemini (API *)"): 10, # Gemini
 		}
 		self.service_map = {
 			_("Traductor DeepL (API Free *)"): "deepL_free",
 			_("Traductor DeepL (API Pro *)"): "deepL_pro",
 			_("Traductor LibreTranslate (API *)"): "libre_translate",
 			_("Traductor OpenAI GPT4o-mini (API *)"): "openai",
+			_("Traductor Gemini (API *)"): "gemini", # Gemini
 		}
 		# Diccionario para obtener el choice idiioma destino
 		self.choice_dict = {
@@ -120,6 +126,7 @@ class GestorSettings:
 			7: self.choiceLangDestino_microsoft,
 			8: self.choiceLangDestino_deepl,
 			9: self.choiceLangDestino_openai,
+			10: self.choiceLangDestino_gemini, # Gemini
 		}
 		# Diccionario con teclas y descripciones
 		self.__newGestures = {
@@ -162,6 +169,7 @@ class GestorSettings:
 			"choiceLangDestino_google_def": f"string(default={self.obtenerLenguaje()})",
 			"choiceLangDestino_google_alt": f"string(default=en)",
 			"choiceLangDestino_openai": f"string(default={self.obtenerLenguaje()})",
+			"choiceLangDestino_gemini": f"string(default={self.obtenerLenguaje()})", # Gemini
 			"guiLang_origen": f"string(default=auto)",
 			"guiLang_destino": f"string(default={self.obtenerLenguaje()})",
 			"chkCache": "boolean(default=False)",
@@ -172,6 +180,8 @@ class GestorSettings:
 			"api_libretranslate": "string(default=None)",
 			"api_libretranslate_url": "string(default=None)",
 			"api_openai": "string(default=None)",
+			"api_gemini": "string(default=None)", # Gemini
+			"openai_custom_prompt": "string(default='Translate the following text exactly as is to the language specified by the ISO 639-1 code {target_language}. Do not change proper names, idioms, or provide explanations: {text_chunk}')", # OpenAI Custom Prompt
 			"snd_vol": f"string(default={self.convertir_valor(50)})",
 			"snd_vel": "integer(default=2, min=0, max=6)",
 			"snd_rw": "integer(default=1, min=0, max=5)",
@@ -211,6 +221,7 @@ class GestorSettings:
 		self.choiceLangDestino_libretranslate = self.getConfig("choiceLangDestino_libretranslate")
 		self.choiceLangDestino_microsoft = self.getConfig("choiceLangDestino_microsoft")
 		self.choiceLangDestino_openai = self.getConfig("choiceLangDestino_openai")
+		self.choiceLangDestino_gemini = self.getConfig("choiceLangDestino_gemini") # Gemini
 		self.choiceLangDestino_google_def = self.getConfig("choiceLangDestino_google_def")
 		self.choiceLangDestino_google_alt = self.getConfig("choiceLangDestino_google_alt")
 		self.guiLang_origen = self.getConfig("guiLang_origen")
@@ -223,6 +234,8 @@ class GestorSettings:
 		self.api_libretranslate = self.convertir_valor(self.getConfig("api_libretranslate"))
 		self.api_libretranslate_url = self.getConfig("api_libretranslate_url")
 		self.api_openai = self.convertir_valor(self.getConfig("api_openai"))
+		self.api_gemini = self.convertir_valor(self.getConfig("api_gemini")) # Gemini
+		self.openai_custom_prompt = self.getConfig("openai_custom_prompt") # OpenAI Custom Prompt
 		self.snd_vol = self.getConfig("snd_vol")
 		self.snd_vel = self.getConfig("snd_vel")
 		self.snd_rw = self.getConfig("snd_rw")
@@ -240,6 +253,7 @@ class GestorSettings:
 		self.setConfig("choiceLangDestino_microsoft", self.choiceLangDestino_microsoft)
 		self.setConfig("choiceLangDestino_google_def", self.choiceLangDestino_google_def)
 		self.setConfig("choiceLangDestino_openai", self.choiceLangDestino_openai)
+		self.setConfig("choiceLangDestino_gemini", self.choiceLangDestino_gemini) # Gemini
 		self.setConfig("choiceLangDestino_google_alt", self.choiceLangDestino_google_alt)
 		self.setConfig("guiLang_origen", self.guiLang_origen)
 		self.setConfig("guiLang_destino", self.guiLang_destino)
@@ -251,6 +265,8 @@ class GestorSettings:
 		self.setConfig("api_libretranslate", self.convertir_valor(self.api_libretranslate))
 		self.setConfig("api_libretranslate_url", self.api_libretranslate_url)
 		self.setConfig("api_openai", self.convertir_valor(self.api_openai))
+		self.setConfig("api_gemini", self.convertir_valor(self.api_gemini)) # Gemini
+		self.setConfig("openai_custom_prompt", self.openai_custom_prompt) # OpenAI Custom Prompt
 		self.setConfig("snd_vol", self.snd_vol)
 		self.setConfig("snd_vel", self.snd_vel)
 		self.setConfig("snd_rw", self.snd_rw)

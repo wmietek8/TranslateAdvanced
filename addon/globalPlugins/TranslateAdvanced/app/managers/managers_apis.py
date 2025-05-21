@@ -18,7 +18,7 @@ class APIManager:
 	"""
 	def __init__(self, filepath):
 		self.filepath = filepath
-		self.required_services = ["deepL_free", "deepL_pro", "libre_translate", "openai"]
+		self.required_services = ["deepL_free", "deepL_pro", "libre_translate", "openai", "gemini"]
 		if not os.path.exists(filepath):
 			self.data = {service: [] for service in self.required_services}
 			self.save()

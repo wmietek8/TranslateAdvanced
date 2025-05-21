@@ -20,11 +20,13 @@ class TranslatorOpenAI:
 	Clase para manejar la traducción de texto utilizando la API de OpenAI.
 	"""
 
-	def __init__(self):
+	def __init__(self, settings_manager=None):
 		"""
 		Inicializa una instancia del traductor de OpenAI.
 
+		:param settings_manager: El gestor de configuración.
 		"""
+		self.settings_manager = settings_manager
 		self.error = {"success": False, "data": None}
 		self.traductor_hilo = None
 
@@ -88,7 +90,7 @@ class TranslatorOpenAI:
 			}
 		}
 
-		self.traductor_hilo = self.TraductorHilo(text, target_language, self.models, api_key, mostrar_progreso, widget)
+		self.traductor_hilo = self.TraductorHilo(text, target_language, self.models, api_key, mostrar_progreso, widget, self.settings_manager)
 		self.traductor_hilo.start()
 		self.traductor_hilo.join()  # Esperar a que el hilo termine
 		self.error = self.traductor_hilo.error  # Actualizar el estado de error
@@ -123,7 +125,7 @@ Error:
 		Clase interna que extiende threading.Thread para manejar la traducción en un hilo separado.
 		"""
 
-		def __init__(self, text, target_language, models, api_key, mostrar_progreso, widget):
+		def __init__(self, text, target_language, models, api_key, mostrar_progreso, widget, settings_manager):
 			"""
 			Inicializa el hilo de traducción.
 
@@ -133,12 +135,14 @@ Error:
 			:param api_key: Clave de la API de OpenAI.
 			:param mostrar_progreso: Mostrar el progreso de la traducción.
 			:param widget: Función para actualizar el progreso.
+			:param settings_manager: El gestor de configuración.
 			"""
 			super().__init__()
 			self.text = text
 			self.target_language = target_language
 			self.models = models
 			self.api_key = api_key
+			self.settings_manager = settings_manager
 			self.translation = ''
 			self.error = {"success": False, "data": None}
 			self.opener = urllib.request.build_opener()
@@ -164,6 +168,15 @@ Error:
 			chunks = TranslatorOpenAI.split_text(self, self.text, model_info["max_tokens"] // 2)  # Dividir texto basado en tokens
 			self.total_chunks = len(chunks)
 
+			custom_prompt_template = None
+			if self.settings_manager:
+				custom_prompt_template = self.settings_manager.getConfig("openai_custom_prompt")
+
+			default_prompt_template = "Translate the following text exactly as is to the language specified by the ISO 639-1 code {target_language}. Do not change proper names, idioms, or provide explanations: {text_chunk}"
+			
+			if not custom_prompt_template: # Handles None or empty string
+				custom_prompt_template = default_prompt_template
+
 			for chunk in chunks:
 				if self._stop_event.is_set():
 					self.error = {"success": True, "data": _("Proceso cancelado por el usuario")}
@@ -184,11 +197,12 @@ Error:
 					"Authorization": f"Bearer {self.api_key}"
 				}
 
+				prompt_content = custom_prompt_template.format(target_language=self.target_language, text_chunk=chunk)
+				messages = [{"role": "user", "content": prompt_content}]
+				
 				data = {
 					"model": model,
-					"messages": [
-						{"role": "user", "content": f"Translate the following text exactly as is to the language specified by the ISO 639-1 code '{self.target_language}'. Do not change proper names, idioms, or provide explanations: '{chunk}'"}
-					],
+					"messages": messages,
 					"max_tokens": max_tokens
 				}
 
