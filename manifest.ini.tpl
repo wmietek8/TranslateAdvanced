@@ -8,3 +8,5 @@ docFileName = {addon_docFileName}
 minimumNVDAVersion = {addon_minimumNVDAVersion}
 lastTestedNVDAVersion = {addon_lastTestedNVDAVersion}
 updateChannel = {addon_updateChannel}
+license = {addon_license}
+licenseURL = {addon_licenseURL}

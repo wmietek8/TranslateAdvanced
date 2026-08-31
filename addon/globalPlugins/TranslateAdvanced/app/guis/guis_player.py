@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Modified by Axel (wmietek8), 2026, for NVDA 2026 AMD64 compatibility.
 # Copyright (C) 2024 Héctor J. Benítez Corredera <xebolax@gmail.com>
 #
 # Carga NVDA
@@ -424,10 +425,8 @@ class ReproductorWav(wx.Dialog):
 			total_time = self.player.get_total_time()
 			percentage = (current_time / total_time) * 100 if total_time > 0 else 0
 			status_text = _(
-				f"Tiempo transcurrido: {self.player.format_time(current_time)}  "
-				f"Tiempo total: {self.player.format_time(total_time)}  "
-				f"Porcentaje de reproducción: {percentage:.2f}%"
-			)
+				"Tiempo transcurrido: {}  Tiempo total: {}  Porcentaje de reproducción: {:.2f}%"
+			).format(self.player.format_time(current_time), self.player.format_time(total_time), percentage)
 			self.informar_accion(status_text)
 		except Exception as e:
 			gui.messageBox(str(e), _("Error al actualizar el estado"), wx.ICON_ERROR)
@@ -441,7 +440,7 @@ class ReproductorWav(wx.Dialog):
 			self.slider_volumen.SetValue(current_volume - 1)
 			self.player.set_volume(current_volume - 1)
 			self.snd_vol = current_volume - 1
-			ui.message(_("Volumen {}%".format(current_volume - 1)))
+			ui.message(_("Volumen {}%").format(current_volume - 1))
 
 	def increase_volume(self, event):
 		"""
@@ -452,7 +451,7 @@ class ReproductorWav(wx.Dialog):
 			self.slider_volumen.SetValue(current_volume + 1)
 			self.player.set_volume(current_volume + 1)
 			self.snd_vol = current_volume + 1
-			ui.message(_("Volumen {}%".format(current_volume + 1)))
+			ui.message(_("Volumen {}%").format(current_volume + 1))
 
 	def decrease_speed(self, event):
 		"""
@@ -462,7 +461,7 @@ class ReproductorWav(wx.Dialog):
 		if current_selection > 0:
 			self.choice_velocidad.SetSelection(current_selection - 1)
 			self.on_change_speed(None)
-			ui.message(_("Velocidad {}%".format(self.choice_velocidad.GetString(current_selection - 1))))
+			ui.message(_("Velocidad {}%").format(self.choice_velocidad.GetString(current_selection - 1)))
 
 	def increase_speed(self, event):
 		"""
@@ -472,7 +471,7 @@ class ReproductorWav(wx.Dialog):
 		if current_selection < self.choice_velocidad.GetCount() - 1:
 			self.choice_velocidad.SetSelection(current_selection + 1)
 			self.on_change_speed(None)
-			ui.message(_("Velocidad {}%".format(self.choice_velocidad.GetString(current_selection + 1))))
+			ui.message(_("Velocidad {}%").format(self.choice_velocidad.GetString(current_selection + 1)))
 
 	def on_load(self, event):
 		"""

@@ -1,5 +1,12 @@
 # Manual del Usuario: Traductor Avanzado para NVDA
 
+> **Modified community fork.** The original add-on was created by Héctor J.
+> Benítez Corredera (`hxebolax`) and is available at
+> https://github.com/hxebolax/TranslateAdvanced. This fork is maintained by
+> Axel (`wmietek8`) and is not an official upstream release. It preserves the
+> original copyright notices and is distributed under GNU GPL v2. See
+> `COPYING.txt` and `MODIFICATIONS.md`.
+
 <h2 id="indice">Índice</h2>
 
 - [1 - Introducción](#introduccion)

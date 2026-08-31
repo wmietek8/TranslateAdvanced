@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Modified by Axel (wmietek8), 2026: NVDA AMD64 compatibility, localization,
+# cache handling, and clipboard translation behavior. Original copyright and
+# GPL v2 licensing remain in effect; see COPYING.txt and MODIFICATIONS.md.
 # Copyright (C) 2024 Héctor J. Benítez Corredera <xebolax@gmail.com>
 # Este archivo está cubierto por la Licencia Pública General de GNU.
 #
@@ -22,6 +25,10 @@ import wx
 import time
 from threading import Thread
 # Carga personal
+from .app.utils.utils_translation import install_translation_fallback
+
+install_translation_fallback()
+
 from .app.managers.managers_settings import GestorSettings
 from .app.managers.managers_lang import TraductorIdiomas
 from .app.managers.managers_translate import GestorTranslate
@@ -412,7 +419,7 @@ Desactívela para realizar esta acción.""")
 				try:
 					os.unlink(os.path.join(path, entry))
 				except Exception:
-					logHandler.log.error(_(f"Fallo al eliminar {entry}"))
+					logHandler.log.error(_("Fallo al eliminar {}").format(entry))
 					error = True
 		else:
 			ui.message(_("El directorio de la cache no existe."))
@@ -438,15 +445,26 @@ Desactívela para realizar esta acción.""")
 				data = languageHandler.getLanguageDescription(self.gestor_translate.get_choice_lang_destino())
 				ui.message(_("Pulse dos veces para eliminar todas las traducciones de {} en lenguaje {}").format(appName, self.gestor_translate.get_choice_lang_destino() if data is None else data))
 				return
-		self.gestor_settings._translationCache[appName] = {}
-		fullPath = os.path.join(self.gestor_settings.dir_cache, "{}_{}.json".format(appName, self.gestor_translate.get_choice_lang_destino()))
-		if os.path.exists(fullPath):
+		cache_names = [
+			self.gestor_translate.get_cache_app_name(),
+			"{}_{}".format(appName, self.gestor_translate.get_choice_lang_destino()),
+		]
+		for cache_name in cache_names:
+			self.gestor_settings._translationCache[cache_name] = {}
+		deleted = False
+		for cache_name in cache_names:
+			fullPath = os.path.join(self.gestor_settings.dir_cache, "{}.json".format(cache_name))
+			if not os.path.exists(fullPath):
+				continue
 			try:
 				os.unlink(fullPath)
-				ui.message(_("Se ha borrado la cache de la aplicación {} correctamente.").format(appName))
+				deleted = True
 			except Exception as e:
 				logHandler.log.error(_("Fallo al borrar la cache de la aplicación {} : {}").format(appName, str(e)))
 				ui.message(_("Error al borrar la caché de traducción de la aplicación."))
+				return
+		if deleted:
+			ui.message(_("Se ha borrado la cache de la aplicación {} correctamente.").format(appName))
 		else:
 			ui.message(_("No hay traducciones guardadas para {}").format(appName))
 
@@ -526,9 +544,13 @@ Desactívela para realizar esta acción.""")
 				if len(texto) < 3000:
 					temp = self.gestor_settings._enableTranslation
 					self.gestor_settings._enableTranslation = False
-					result = self.gestor_translate.translate_various(texto)
-					ui.message(result)
-					self.gestor_settings._enableTranslation = temp
+					try:
+						result = self.gestor_translate.translate_various(texto)
+						ui.message(result)
+						if result:
+							self.gestor_portapapeles.set_clipboard_text(result)
+					finally:
+						self.gestor_settings._enableTranslation = temp
 				else: # Más de 3000 caracteres
 					self.gestor_settings._enableTranslation = False
 					self.gestor_settings.is_active_translate = True

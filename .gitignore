@@ -1,0 +1,16 @@
+# Python caches
+__pycache__/
+*.py[cod]
+
+# SCons state and generated release artifacts
+.sconsign.dblite
+*.nvda-addon
+20*.json
+
+# Generated add-on files
+addon/manifest.ini
+addon/doc/
+addon/COPYING.txt
+addon/MODIFICATIONS.md
+addon/locale/*/LC_MESSAGES/*.mo
+addon/locale/*/manifest.ini

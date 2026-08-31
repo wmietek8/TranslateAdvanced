@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Modified by Axel (wmietek8), 2026, for current API compatibility.
 # Copyright (C) 2024 Héctor J. Benítez Corredera <xebolax@gmail.com>
 # Este archivo está cubierto por la Licencia Pública General de GNU.
 #
@@ -204,7 +205,7 @@ Error:
 				except urllib.error.HTTPError as e:
 					error_message = e.read().decode('utf-8')
 					error_json = json.loads(error_message)
-					self.error = {"success": True, "data": error_json.get('error', {}).get('message', 'Unknown error')}
+					self.error = {"success": True, "data": error_json.get('error', {}).get('message', _("Error desconocido"))}
 					return
 				except Exception as e:
 					self.error = {"success": True, "data": str(e)}

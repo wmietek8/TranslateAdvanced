@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Modified by Axel (wmietek8), 2026, for current Microsoft API compatibility.
 # Copyright (C) 2024 Héctor J. Benítez Corredera <xebolax@gmail.com>
 # Este archivo está cubierto por la Licencia Pública General de GNU.
 #
@@ -42,10 +43,10 @@ class TranslatorMicrosoftApiFree:
 		"""
 		parts = token.split(".")
 		if len(parts) <= 1:
-			raise Exception('Failed to get APP key due to an invalid Token.')
+			raise Exception(_("No se pudo obtener la clave de aplicación debido a un token no válido."))
 		base64_url = parts[1]
 		if not base64_url:
-			raise Exception('Failed to get APP key due to an invalid Base64 URL.')
+			raise Exception(_("No se pudo obtener la clave de aplicación debido a una URL Base64 no válida."))
 		base64_url = base64_url.replace('-', '+').replace('_', '/')
 		json_payload = base64.b64decode(base64_url + '===').decode('utf-8')
 		parsed = json.loads(json_payload)
@@ -121,16 +122,12 @@ class TranslatorMicrosoftApiFree:
 			response = urlopen(request)
 
 			if response.status != 200:
-				raise Exception(f'Error en la traducción: {response.read().decode("utf-8")}')
+				raise Exception(_("Error en la traducción: {0}").format(response.read().decode("utf-8")))
 
 			translate_data = json.loads(response.read().decode('utf-8'))[0]['translations'][0]['text']
 
 		except Exception as e:
-			msg = f"""Error en la traducción.
-
-Error:
-
-{str(e)}"""
+			msg = _("Error en la traducción.\n\nError:\n\n{}").format(str(e))
 			logHandler.log.error(msg)
 			return text  # Devuelve el texto original en caso de error
 

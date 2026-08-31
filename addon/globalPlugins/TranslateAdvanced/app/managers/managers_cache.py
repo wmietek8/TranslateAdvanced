@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Modified by Axel (wmietek8), 2026, for engine-isolated translation caches.
 # Copyright (C) 2024 Héctor J. Benítez Corredera <xebolax@gmail.com>
 # Este archivo está cubierto por la Licencia Pública General de GNU.
 #
@@ -47,7 +48,7 @@ class LocalCacheHandler:
 				return
 
 		for entry in os.listdir(path):
-			m = re.match("(.*)\.json$", entry)
+			m = re.match(r"(.*)\.json$", entry)
 			if m:
 				appName = m.group(1)
 				try:

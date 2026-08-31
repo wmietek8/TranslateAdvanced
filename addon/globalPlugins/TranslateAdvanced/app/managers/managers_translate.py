@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Modified by Axel (wmietek8), 2026: selected-engine routing, cache isolation,
+# short-response handling, and direct clipboard translation. Original
+# copyright and GPL v2 licensing remain in effect.
 # Copyright (C) 2024 Héctor J. Benítez Corredera <xebolax@gmail.com>
 # Este archivo está cubierto por la Licencia Pública General de GNU.
 #
@@ -25,6 +28,7 @@ from ..src_translations.src_deepl_free import TranslatorDeepLFree
 from ..src_translations.src_openai_4o_api import TranslatorOpenAI
 from ..src_translations.src_detect import DetectorDeIdioma
 from ..managers.managers_dict import LanguageDictionary
+from ..utils.utils_short_translation import postprocess_short_translation
 
 # Carga traducción
 addonHandler.initTranslation()
@@ -199,7 +203,7 @@ class GestorTranslate(
 
 	def translate_various(self, text):
 		"""
-		Traduce el texto dado utilizando el traductor de Google API gratuito y actualiza el historial de traducciones y el texto traducido más reciente.
+		Traduce el texto dado utilizando el servicio seleccionado actualmente y actualiza el historial de traducciones y el texto traducido más reciente.
 
 		Args:
 			text (str): El texto a traducir.
@@ -217,23 +221,31 @@ class GestorTranslate(
 				- Actualiza el último texto traducido con el texto traducido.
 				- Si el soporte de braille está habilitado, muestra el mensaje del último texto traducido.
 		"""
-		if self.frame.gestor_settings.chkAltLang:
-			detector = DetectorDeIdioma()
-			resultado = detector.detectar_idioma(text)
-			if resultado['success']:
-				idioma_detectado = resultado['data']
-				if idioma_detectado != self.frame.gestor_settings.choiceLangDestino_google_def:
-					lang_to = self.frame.gestor_settings.choiceLangDestino_google_def
-				else:
-					lang_to = self.frame.gestor_settings.choiceLangDestino_google_alt
-			else:
-				# En caso de error en la detección, usar el idioma por defecto
-				lang_to = self.frame.gestor_settings.choiceLangDestino_google_def
-		else:
-			lang_to = self.frame.gestor_settings.choiceLangDestino_google
-
 		prepared = text
-		translated = TranslatorGoogleApiFree().translate_google_api_free(lang_from='auto', lang_to=lang_to, text=prepared)
+		settings = self.frame.gestor_settings
+		# Use exactly the same engine as real-time translation and preserve the
+		# primary/alternate target-language behavior for direct commands.
+		target_attribute = {
+			0: "choiceLangDestino_google", 1: "choiceLangDestino_google",
+			2: "choiceLangDestino_google", 3: "choiceLangDestino_google",
+			4: "choiceLangDestino_deepl", 5: "choiceLangDestino_deepl",
+			6: "choiceLangDestino_libretranslate", 7: "choiceLangDestino_microsoft",
+			8: "choiceLangDestino_deepl", 9: "choiceLangDestino_openai",
+		}.get(settings.choiceOnline)
+		original_target = getattr(settings, target_attribute) if target_attribute else None
+		if settings.chkAltLang and target_attribute:
+			# Direct commands use the alternate target language without calling a
+			# separate language-detection service. The selected translation engine
+			# remains the only service receiving the clipboard text.
+			setattr(settings, target_attribute, settings.choiceLangDestino_google_alt)
+		translation_was_enabled = settings._enableTranslation
+		settings._enableTranslation = True
+		try:
+			translated = self.translate(prepared)
+		finally:
+			settings._enableTranslation = translation_was_enabled
+			if target_attribute:
+				setattr(settings, target_attribute, original_target)
 		if prepared.rstrip() == translated.rstrip():
 			self.frame.gestor_settings._lastTranslatedText = prepared
 			if braille.handler._get_enabled():
@@ -263,7 +275,22 @@ class GestorTranslate(
 		"""
 		prepared = text
 		translated = TranslatorGoogleApiFree().translate_google_api_free(lang_from='auto', lang_to=self.frame.gestor_settings.choiceLangDestino_google, text=prepared, chunksize=3000, mostrar_progreso=True, widget=func_progress)
+		translated = postprocess_short_translation(prepared, translated, self.frame.gestor_settings.choiceLangDestino_google)
 		return translated
+
+	def get_cache_app_name(self):
+		"""
+		Devuelve la clave de cache para la aplicacion, idioma y motor actuales.
+		"""
+		try:
+			app_name = globalVars.focusObject.appModule.appName
+		except:
+			app_name = "__global__"
+		return "{}_{}_{}".format(
+			app_name,
+			self.get_choice_lang_destino(),
+			self.frame.gestor_settings.choiceOnline,
+		)
 
 	def translate(self, text):
 		"""
@@ -272,10 +299,7 @@ class GestorTranslate(
 		:param text: El texto a traducir.
 		:return: El texto traducido.
 		"""
-		try:
-			appName = "{}_{}".format(globalVars.focusObject.appModule.appName, self.get_choice_lang_destino())
-		except:
-			appName = "__global__"
+		appName = self.get_cache_app_name()
 
 		if not self.frame.gestor_settings._enableTranslation:
 			return text
@@ -369,6 +393,7 @@ Error:
 		if not translated:
 			translated = text
 		else:
+			translated = postprocess_short_translation(text, translated, self.get_choice_lang_destino())
 			if self.frame.gestor_settings.chkCache:
 				self.frame.gestor_settings._translationCache[appName][text] = translated
 

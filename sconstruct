@@ -164,8 +164,12 @@ def createAddonBundleFromPath(path, dest):
 	with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as z:
 		# FIXME: the include/exclude feature may or may not be useful. Also python files can be pre-compiled.
 		for dir, dirnames, filenames in os.walk(basedir):
+			# Never distribute local Python caches or test/build leftovers.
+			dirnames[:] = [name for name in dirnames if name != "__pycache__"]
 			relativePath = os.path.relpath(dir, basedir)
 			for filename in filenames:
+				if filename.endswith((".pyc", ".pyo")):
+					continue
 				pathInBundle = os.path.join(relativePath, filename)
 				absPath = os.path.join(dir, filename)
 				if pathInBundle not in buildVars.excludedFiles:
@@ -275,6 +279,20 @@ def expandGlobs(files):
 
 
 addon = env.NVDAAddon(addonFile, env.Dir('addon'))
+
+# Distribute the GPL text and modified-version attribution with the binary
+# add-on, not only with the source repository.
+licenseTarget = env.Command(
+	os.path.join("addon", "COPYING.txt"),
+	"COPYING.txt",
+	Copy("$TARGET", "$SOURCE"),
+)
+modificationsTarget = env.Command(
+	os.path.join("addon", "MODIFICATIONS.md"),
+	"MODIFICATIONS.md",
+	Copy("$TARGET", "$SOURCE"),
+)
+env.Depends(addon, [licenseTarget, modificationsTarget])
 
 langDirs = [f for f in env.Glob(os.path.join("addon", "locale", "*"))]
 
