@@ -96,7 +96,7 @@ def static_error_messages(source, *, manager=False):
         return set()
 
     messages = defaultdict(set)
-    error_types = {"TranslationError", "CodexError", "RuntimeError"}
+    error_types = {"TranslationError", "CodexError", "RuntimeError", "RuntimeInstallError", "RuntimeInstallCancelled"}
     if manager:
         error_types.update({"ValueError", "RuntimeError"})
     for node in ast.walk(tree):

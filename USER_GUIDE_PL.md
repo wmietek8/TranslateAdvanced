@@ -1,10 +1,10 @@
-# TranslateAdvanced 2026.5: konto ChatGPT, modele i tłumaczenie w locie
+# TranslateAdvanced 2026.6: konto ChatGPT, modele i tłumaczenie w locie
 
 To społecznościowy fork dodatku autorstwa Héctora J. Beníteza Corredera (hxebolax), rozwijany przez Axela (wmietek8). Oryginalne autorstwo i licencja GNU GPL v2 pozostają zachowane. Kod źródłowy: https://github.com/wmietek8/TranslateAdvanced. Szczegóły zmian są w `MODIFICATIONS.md`.
 
 ## Instalacja bez tracenia obecnych ustawień
 
-Otwórz paczkę `TranslateAdvanced-2026.5.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
+Otwórz paczkę `TranslateAdvanced-2026.6.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
 
 Sama paczka nie zawiera kluczy API ani zalogowanego konta. Przekazanie jej znajomym nie przekazuje dostępu do Twoich usług. Każdy konfiguruje swoje konto lub swój klucz.
 
@@ -51,14 +51,16 @@ Domyślne **auto** wybiera dostępny model z zalecanej listy. Dla API pierwszą 
 
 **Ważne:** logowaniem i odświeżaniem sesji zarządza oficjalny Codex, ale beznarzędziowy transport tłumaczeń wykorzystuje nieudokumentowany publicznie endpoint ChatGPT/Codex. To nie jest stabilny, oficjalny interfejs OAuth dla dowolnego dodatku. Zmiana usługi może wymagać aktualizacji dodatku. Stabilną alternatywą jest klucz API.
 
-1. Zainstaluj oficjalny **Codex CLI dla Windows** według instrukcji https://developers.openai.com/codex/cli. Jest potrzebny tylko w trybie ChatGPT, nie w trybie klucza API.
-2. W dodatkowych ustawieniach OpenAI wybierz **ChatGPT OAuth**. Ścieżkę do `codex.exe` można zostawić pustą, jeśli jest wykrywany automatycznie, albo wskazać pełną ścieżkę do oficjalnego pliku wykonywalnego. W to pole nie wpisuj klucza ani tokenu.
-3. Naciśnij **Zaloguj się do ChatGPT**. Dokończ logowanie w przeglądarce na stronie OpenAI. Hasła nie podajesz w dodatku.
+1. Nie trzeba osobno instalować Codexa. Automatyczne przygotowanie działa na Windows x64 i ARM64, również przy 32-bitowym NVDA na 64-bitowym systemie. Na samym Windows x86 można korzystać z klucza API.
+2. W dodatkowych ustawieniach OpenAI wybierz **Konto ChatGPT**. Ręczna ścieżka do `codex.exe` jest opcjonalna i schowana pod przełącznikiem **Pokaż ustawienia zaawansowane** (Alt+W). Zostaw ją pustą, aby dodatek sam przygotował komponent. W to pole nie wpisuj klucza ani tokenu.
+3. Naciśnij **Zaloguj się do ChatGPT**. Jeżeli brakuje komponentu i zainstalowanego Codexa, dodatek pobierze go z oficjalnego wydania OpenAI na GitHubie, pokaże postęp i sprawdzi poprawność plików. Pierwsze pobranie ma około 100 MB; przygotowanie potrzebuje około 450 MB wolnego miejsca. Następnie dokończ logowanie w przeglądarce na stronie OpenAI. Hasła nie podajesz w dodatku.
 4. Po zalogowaniu dodatek automatycznie potwierdza konto, pobiera modele i ukrywa przycisk logowania. Pojawia się przycisk **Wyloguj**. Przy ponownym otwarciu konta nie trzeba sprawdzać ręcznie; okno robi to w tle.
 5. Wybierz model ze zwykłej listy **Model** albo zostaw `auto`. Lista jest zapisana w profilu NVDA, także po restarcie, aż do wylogowania lub zmiany konta. **Odśwież modele** służy do ręcznego pobrania nowszej listy, a nie do obowiązkowego klikania przy każdym otwarciu.
 6. Naciśnij **Używaj tego silnika**, aby wybrać OpenAI do tłumaczenia. Następnie włącz tłumaczenie w locie gestem **NVDA+Shift+T**. Konto ChatGPT nie wymaga żadnego klucza API. Menedżer kluczy i jego przycisk „Domyślny” są w tym trybie ukryte.
 
 Samo pomyślne logowanie od razu zapisuje metodę ChatGPT i ścieżkę programu obsługującego logowanie. Jeśli wersja 2026.3 zachowała konto, lecz nie zapisała tej metody, aktualizacja rozpoznaje lokalną sesję dodatku przy braku wybranego klucza OpenAI. Nie zmienia przy tym wyboru innych silników.
+
+Komponent jest zapisywany w `TranslateAdvanced/codex-runtime` w katalogu konfiguracji NVDA. Pozostaje tam po restarcie i wylogowaniu; kolejne logowania nie wymagają pobierania go ponownie. Nie wymaga Node.js, instalatora, administratora ani zmian PATH. Samo otwarcie ustawień bez zalogowanego konta nie uruchamia pobierania. **Anuluj logowanie** lub zamknięcie okna przerywa przygotowanie; niekompletny plik nie zostaje użyty. Własna ścieżka w ustawieniach zaawansowanych ma pierwszeństwo i nie jest potajemnie zastępowana po błędzie.
 
 Nazwa integracji przekazywana przez dodatek to **TranslateAdvanced**, ale **klient OAuth nadal należy do Codexa**. Parametr `appBrand=chatgpt` wybiera jedynie stronę powitalną ChatGPT po zalogowaniu; nie rejestruje wtyczki jako osobnej aplikacji i nie zmienia tożsamości na ekranie zgody. Ten mechanizm dopuszcza tylko marki `codex` i `chatgpt`, nie dowolną nazwę. Własna tożsamość OAuth wymagałaby osobnej rejestracji po stronie OpenAI; w sprawdzonej publicznej dokumentacji nie znaleziono ścieżki rejestracji dowolnej wtyczki z dostępem do abonamentu ChatGPT. Dokumentacja: https://learn.chatgpt.com/docs/app-server.
 
@@ -79,7 +81,9 @@ Model nie dostaje dostępu do plików, terminala, przeglądarki ani narzędzi ag
 - Tekst jest wysyłany do wybranego dostawcy. Nie tłumacz haseł ani innych informacji, których nie chcesz przekazywać tej usłudze. Historia i opcjonalny cache dodatku mogą zachowywać tłumaczone treści lokalnie.
 - Błędy uwierzytelniania wymagają sprawdzenia klucza albo ponownego zalogowania. Błąd limitu wymaga poczekania lub sprawdzenia planu/rozliczeń; dodatek nie obchodzi limitów.
 - Przy braku modelu odśwież listę i wybierz dostępny model, np. `gpt-6-astra`. Wcześniejszy zapisany model pozostaje widoczny, dopóki nie wybierzesz innego lub nie wylogujesz konta.
-- Jeśli tłumaczenie w locie się nie powiedzie, NVDA odczytuje oryginał i krótki komunikat o błędzie. Powtarzający się błąd jest ograniczony do jednego powiadomienia na pół minuty; treść prywatnych wyjątków nie jest odczytywana.
+- Jeśli tłumaczenie w locie się nie powiedzie, NVDA odczytuje oryginał i komunikat o błędzie. Angielski oryginał po takiej odmowie nie jest wynikiem tłumaczenia. Błąd `credit_balance_exhausted` oznacza brak kredytów API w organizacji przypisanej do klucza; widoczna lista modeli nie potwierdza dostępnego salda. Sprawdź rozliczenia API; abonament ChatGPT i jego dodatkowe kredyty stanowią osobną pulę.
+- Po błędzie API 401, 403 lub 429 przez minutę nie są ponawiane automatyczne próby tłumaczenia kolejnych wypowiedzi. Zapisane przekłady pozostają dostępne, a pozostały tekst jest odczytywany od razu w oryginale. Zmiana klucza, modelu lub metody pozwala spróbować natychmiast. Przerwa dotyczy także przejścia do innej aplikacji. Ręczne polecenia tłumaczenia nadal wykonują jawną próbę.
+- Powtarzające się pozostałe błędy są ograniczone do jednego powiadomienia na pół minuty; treść prywatnych wyjątków nie jest odczytywana.
 - Wynik identyczny z oryginałem nie jest ogłaszany jako udane tłumaczenie schowka. Może oznaczać już właściwy język, nazwę własną albo odpowiedź, której model nie zmienił.
 - Tłumaczenie schowka odbywa się poza głównym wątkiem NVDA. Tłumaczenie każdej wypowiedzi w locie nadal zależy od szybkości wybranej usługi; duży model OpenAI może wprowadzać zauważalne opóźnienia.
 - Po ręcznej aktualizacji plików dodatku konieczne jest ponowne uruchomienie NVDA. Testy poza procesem NVDA nie oznaczają, że uruchomiona już instancja załadowała nową wersję.

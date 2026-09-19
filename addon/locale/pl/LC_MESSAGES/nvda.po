@@ -2801,7 +2801,6 @@ msgstr ""
 msgid "Use the add-on's dedicated Codex home."
 msgstr "Użyj katalogu danych Codex przeznaczonego dla tego dodatku."
 
-
 #: globalPlugins/TranslateAdvanced/app/src_translations/src_deepl_original.py
 msgid "DeepL: HTTP {}"
 msgstr "DeepL: błąd HTTP {}"
@@ -2809,7 +2808,6 @@ msgstr "DeepL: błąd HTTP {}"
 #: globalPlugins/TranslateAdvanced/app/src_translations/src_deepl_original.py
 msgid "DeepL: translation failed."
 msgstr "DeepL: nie udało się przetłumaczyć tekstu."
-
 
 # Poprawki konta ChatGPT i dostępności w wersji 2026.4.
 #: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:135
@@ -2887,3 +2885,190 @@ msgid ""
 msgstr ""
 "Tłumaczenie w locie nie powiodło się. Sprawdź wybrany silnik i jego "
 "ustawienia."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:129
+msgid ""
+"Zostaw puste, aby dodatek sam przygotował logowanie. Podaj pełną ścieżkę do "
+"codex.exe tylko wtedy, gdy chcesz używać własnej instalacji. Nie wpisuj tu "
+"klucza API."
+msgstr ""
+"Zostaw puste, aby dodatek sam przygotował logowanie. Podaj pełną ścieżkę do "
+"codex.exe tylko wtedy, gdy chcesz używać własnej instalacji. Nie wpisuj tu "
+"klucza API."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:461
+msgid ""
+"Nie udało się przygotować lub ukończyć logowania. Sprawdź połączenie, wolne "
+"miejsce i spróbuj ponownie. Jeśli podano własną ścieżkę w ustawieniach "
+"zaawansowanych, sprawdź jej poprawność."
+msgstr ""
+"Nie udało się przygotować lub ukończyć logowania. Sprawdź połączenie, wolne "
+"miejsce i spróbuj ponownie. Jeśli podano własną ścieżkę w ustawieniach "
+"zaawansowanych, sprawdź jej poprawność."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:131
+msgid ""
+"Przy pierwszym logowaniu dodatek w razie potrzeby pobierze oficjalny "
+"komponent Codex, około 103 MB. Kolejne logowania użyją zapisanej kopii. "
+"Tłumaczenie przez konto ChatGPT jest eksperymentalne."
+msgstr ""
+"Przy pierwszym logowaniu dodatek w razie potrzeby pobierze oficjalny "
+"komponent Codex, około 103 MB. Kolejne logowania użyją zapisanej kopii. "
+"Tłumaczenie przez konto ChatGPT jest eksperymentalne."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:123
+msgid "Pokaż ustawienia zaawansowane"
+msgstr "Pokaż ustawienia zaawansowane"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:384
+msgid "Pobieranie komponentu logowania: {percent}%. Możesz anulować."
+msgstr "Pobieranie komponentu logowania: {percent}%. Możesz anulować."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:460
+msgid ""
+"Przygotowywanie logowania. Jeśli brakuje komponentu, zostanie pobrany "
+"automatycznie. Następnie dokończ logowanie w przeglądarce."
+msgstr ""
+"Przygotowywanie logowania. Jeśli brakuje komponentu, zostanie pobrany "
+"automatycznie. Następnie dokończ logowanie w przeglądarce."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:386
+msgid "Sprawdzanie i rozpakowywanie komponentu logowania..."
+msgstr "Sprawdzanie i rozpakowywanie komponentu logowania..."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:376
+msgid ""
+"Nie udało się sprawdzić konta. Sprawdź połączenie i użyj przycisku "
+"logowania, aby przygotować komponent. Ręczna ścieżka jest dostępna w "
+"ustawieniach zaawansowanych."
+msgstr ""
+"Nie udało się sprawdzić konta. Sprawdź połączenie i użyj przycisku "
+"logowania, aby przygotować komponent. Ręczna ścieżka jest dostępna w "
+"ustawieniach zaawansowanych."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:122
+msgid "Pokaż usta&wienia zaawansowane"
+msgstr "Pokaż usta&wienia zaawansowane"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:388
+msgid "Komponent gotowy. Otwieranie logowania w przeglądarce..."
+msgstr "Komponent gotowy. Otwieranie logowania w przeglądarce..."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:324
+msgid ""
+"Nie udało się odświeżyć modeli ChatGPT. Sprawdź połączenie i użyj przycisku "
+"logowania, aby przygotować komponent lub ponownie zalogować konto."
+msgstr ""
+"Nie udało się odświeżyć modeli ChatGPT. Sprawdź połączenie i użyj przycisku "
+"logowania, aby przygotować komponent lub ponownie zalogować konto."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:110
+msgid "Konto ChatGPT"
+msgstr "Konto ChatGPT"
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:348
+msgid ""
+"Kolejna próba tłumaczenia w locie nastąpi za minutę. Do tego czasu czytany "
+"jest oryginalny tekst."
+msgstr ""
+"Kolejna próba tłumaczenia w locie nastąpi za minutę. Do tego czasu czytany "
+"jest oryginalny tekst."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:57
+msgid ""
+"Brak dostępnych środków lub limitu wydatków OpenAI API. Sprawdź saldo i "
+"rozliczenia organizacji powiązanej z kluczem. Abonament ChatGPT nie zasila "
+"salda API."
+msgstr ""
+"Brak dostępnych środków lub limitu wydatków OpenAI API. Sprawdź saldo i "
+"rozliczenia organizacji powiązanej z kluczem. Abonament ChatGPT nie zasila "
+"salda API."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:237
+msgid ""
+"Komponent logowania nie jest jeszcze przygotowany. Kliknij Zaloguj się na "
+"konto ChatGPT, aby pobrać go automatycznie."
+msgstr ""
+"Komponent logowania nie jest jeszcze przygotowany. Kliknij Zaloguj się na "
+"konto ChatGPT, aby pobrać go automatycznie."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:261
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:122
+msgid "Anulowano przygotowanie logowania."
+msgstr "Anulowano przygotowanie logowania."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:94
+msgid ""
+"Logowanie kontem ChatGPT wymaga 64-bitowego systemu Windows. Na tym systemie"
+" możesz korzystać z klucza API."
+msgstr ""
+"Logowanie kontem ChatGPT wymaga 64-bitowego systemu Windows. Na tym systemie"
+" możesz korzystać z klucza API."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:84
+msgid "Automatyczne logowanie wymaga systemu Windows."
+msgstr "Automatyczne logowanie wymaga systemu Windows."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:124
+msgid "Upłynął czas pobierania komponentu. Spróbuj ponownie."
+msgstr "Upłynął czas pobierania komponentu. Spróbuj ponownie."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:212
+msgid "Kontrola SHA-256 pobranego komponentu nie powiodła się."
+msgstr "Kontrola SHA-256 pobranego komponentu nie powiodła się."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:244
+msgid "Kontrola SHA-256 programu logowania nie powiodła się."
+msgstr "Kontrola SHA-256 programu logowania nie powiodła się."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:108
+msgid "Katalog komponentu nie może być dowiązaniem."
+msgstr "Katalog komponentu nie może być dowiązaniem."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:154
+msgid "Nie można odczytać komponentu logowania."
+msgstr "Nie można odczytać komponentu logowania."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:176
+msgid "Odrzucono nieoczekiwany adres pobierania."
+msgstr "Odrzucono nieoczekiwany adres pobierania."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:196
+msgid "Nie udało się pobrać oficjalnego komponentu."
+msgstr "Nie udało się pobrać oficjalnego komponentu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:227
+msgid "Archiwum komponentu ma nieoczekiwaną zawartość."
+msgstr "Archiwum komponentu ma nieoczekiwaną zawartość."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:231
+msgid "Program w archiwum ma nieprawidłowy rozmiar lub format."
+msgstr "Program w archiwum ma nieprawidłowy rozmiar lub format."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:291
+msgid "GitHub nie udostępnił komponentu. Spróbuj ponownie później."
+msgstr "GitHub nie udostępnił komponentu. Spróbuj ponownie później."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:295
+msgid ""
+"Nie udało się przygotować komponentu logowania. Sprawdź połączenie, wolne "
+"miejsce i dostęp do katalogu profilu NVDA."
+msgstr ""
+"Nie udało się przygotować komponentu logowania. Sprawdź połączenie, wolne "
+"miejsce i dostęp do katalogu profilu NVDA."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:204
+msgid "Pobrany komponent ma nieprawidłowy rozmiar."
+msgstr "Pobrany komponent ma nieprawidłowy rozmiar."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:272
+msgid "Nieprawidłowy katalog tymczasowy komponentu."
+msgstr "Nieprawidłowy katalog tymczasowy komponentu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:285
+msgid "Nie udało się zapisać poprawnego komponentu."
+msgstr "Nie udało się zapisać poprawnego komponentu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:240
+msgid "Program w archiwum przekracza dozwolony rozmiar."
+msgstr "Program w archiwum przekracza dozwolony rozmiar."

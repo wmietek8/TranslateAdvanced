@@ -1,5 +1,13 @@
 # Modified version: attribution and change record
 
+## Wersja 2026.6 — 19 września 2026
+
+- Konto ChatGPT można skonfigurować bez ręcznej instalacji Codexa. Pierwsze logowanie pobiera w tle przypiętą wersję oficjalnego komponentu, jeżeli brakuje dostępnej kopii. Archiwum i program mają sprawdzane rozmiary oraz SHA-256; częściowy program nie jest uruchamiany.
+- Komponent pozostaje w profilu NVDA między restartami i wylogowaniami. Nie jest dołączany do paczki dodatku. Pobieranie można anulować, także zamykając okno.
+- Ręczna ścieżka do programu znajduje się pod przełącznikiem ustawień zaawansowanych. Tryb klucza API nie korzysta z komponentu.
+- Błędy braku środków API są odróżniane od limitu liczby żądań. Po odmowie uwierzytelniania, uprawnień lub limitu następne wypowiedzi przez minutę korzystają z zapisanych przekładów albo z oryginału, bez kolejnych opóźniających prób. Zmiana klucza, modelu lub metody umożliwia natychmiastową próbę.
+- Rozszerzono testy instalacji, integralności, anulowania, natywnych kontrolek, błędów rozliczeń oraz mowy. Dodano jawną próbę rzeczywistego API bez odczytywania schowka i zmiany konfiguracji.
+
 ## Wersja 2026.5 — 19 września 2026
 
 - Sąsiednie fragmenty jednej wypowiedzi NVDA są tłumaczone przez OpenAI jako jedna grupa do 3000 znaków. Komendy NVDA, białe znaki i zapamiętane tłumaczenia zachowują swoje granice; inne silniki nie zmieniają drogi mowy.

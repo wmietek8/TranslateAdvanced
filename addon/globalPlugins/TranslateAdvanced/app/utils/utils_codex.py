@@ -27,6 +27,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from . import utils_codex_response as responses
+from . import utils_codex_runtime as runtime
 from .utils_codex_response import CodexError
 
 _MARKER_NAME = ".translateadvanced-managed"
@@ -150,6 +151,7 @@ class CodexClient:
         self._active_login = None
         self._http_cancel = threading.Event()
         self._model_cache = None
+        self._executable = None
 
     @property
     def closed(self):
@@ -218,13 +220,51 @@ class CodexClient:
         env["PATH"] = os.pathsep.join(paths)
         return env
 
+    def _resolve_executable(self, home: Path) -> str:
+        if self._executable is not None:
+            return self._executable
+        if self._path_value:
+            return resolve_codex_executable(self._path_value)
+        try:
+            managed = runtime.find_managed_executable(home)
+        except runtime.RuntimeInstallError as error:
+            raise CodexError(str(error)) from None
+        if managed is not None:
+            return managed
+        try:
+            return resolve_codex_executable()
+        except CodexError:
+            raise CodexError(
+                "Komponent logowania nie jest jeszcze przygotowany. "
+                "Kliknij Zaloguj się na konto ChatGPT, aby pobrać go automatycznie."
+            ) from None
+
+    def prepare_runtime(
+        self, *, cancel_event: threading.Event | None = None,
+        progress: runtime.Progress | None = None,
+    ) -> None:
+        """Przygotowuje komponent po jawnym kliknięciu logowania, poza wątkiem wx."""
+        with self._operation():
+            home = self._prepare_home()
+            try:
+                executable = self._resolve_executable(home)
+            except CodexError:
+                if self._path_value:
+                    raise
+                executable = runtime.ensure_managed_executable(
+                    home, cancel_event=cancel_event, progress=progress,
+                )
+            if self.closed or (cancel_event is not None and cancel_event.is_set()):
+                raise CodexError("Anulowano przygotowanie logowania.")
+            self._executable = executable
+
     def _ensure_started(self):
         if self.closed:
             raise CodexError("Codex client is closed. Reconnect to try again.")
         if self._process is not None:
             return
         home = self._prepare_home()
-        executable = resolve_codex_executable(self._path_value)
+        executable = self._resolve_executable(home)
         try:
             self._runtime = tempfile.TemporaryDirectory(prefix="translateadvanced-codex-")
             root = Path(self._runtime.name)
@@ -390,6 +430,11 @@ class CodexClient:
     def account(self):
         """Return {} or only type/email. No auth.json access or token refresh."""
         with self._operation():
+            if not self._path_value and self._process is None:
+                home = self._prepare_home()
+                # Otwarcie ustawień bez konta nie pobiera 100 MB ani nie uruchamia CLI.
+                if not (home / "auth.json").is_file():
+                    return {}
             self._ensure_started()
             result = self._rpc("account/read", {"refreshToken": False})
             value = result.get("account")

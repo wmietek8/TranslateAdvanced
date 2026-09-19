@@ -215,3 +215,110 @@ def test_group_failure_preserves_original_content_and_commands(
     assert spoken[-1]["speechSequence"] == ["Sound settings dialog", command, " "]
     assert "prywatna" not in repr(spoken)
     assert not settings._translationCache[instance.get_cache_app_name()]
+
+
+def test_quota_pause_preserves_speech_cache_and_resumes_after_minute(
+    manager: ManagerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Brak środków nie opóźnia kolejnych wypowiedzi i nie wyłącza pamięci."""
+    instance, settings, spoken = manager
+    namespace = instance.translate.__globals__
+    now = [100.0]
+    monkeypatch.setattr(namespace["time"], "monotonic", lambda: now[0])
+    calls = []
+
+    def fail(text: str, options: dict) -> str:
+        calls.append(text)
+        raise namespace["TranslationError"]("Brak środków API.", retry_after=60)
+
+    instance.translate_with_options = fail
+    instance.speak(["First", "message"])
+    command = object()
+    now[0] = 159.0
+    instance.speak(["Second", command, "message"])
+    assert calls == ["First message"]
+    assert spoken[-1]["speechSequence"] == ["Second", command, "message"]
+    settings._translationCache[instance.get_cache_app_name()] = {"Saved": "Zapisane"}
+    instance.speak(["Saved"])
+    assert spoken[-1]["speechSequence"] == ["Zapisane"]
+    monkeypatch.setattr(instance, "get_cache_app_name", lambda: "inna_aplikacja")
+    settings.choiceLangDestino_openai = "en"
+    instance.speak(["Other application"])
+    assert calls == ["First message"]
+    now[0] = 160.0
+    instance.speak(["Third"])
+    assert calls == ["First message", "Third"]
+
+
+@pytest.mark.parametrize("change", ["key", "model", "mode", "disabled"])
+def test_changed_configuration_allows_immediate_retry(
+    manager: ManagerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    change: str,
+) -> None:
+    """Zmiana klucza, modelu lub metody oraz wyłączenie mowy resetują przerwę."""
+    instance, settings, spoken = manager
+    namespace = instance.translate.__globals__
+    monkeypatch.setattr(namespace["time"], "monotonic", lambda: 100.0)
+    settings.openai_auth_mode = "api_key"
+    settings.openai_model_api = "gpt-5.6-luna"
+    settings.api_openai = 0
+    entry = {"key": "tajny-klucz-1"}
+    instance.frame.gestor_apis = SimpleNamespace(get_api=lambda *args: entry)
+    calls = []
+
+    def fail(text: str, options: dict) -> str:
+        calls.append(text)
+        raise namespace["TranslationError"]("Brak środków API.", retry_after=60)
+
+    instance.translate_with_options = fail
+    instance.speak(["First"])
+    assert "tajny-klucz" not in repr(instance._realtime_retry)
+    if change == "key":
+        entry["key"] = "tajny-klucz-2"
+    elif change == "model":
+        settings.openai_model_api = "gpt-5.6-terra"
+    elif change == "mode":
+        settings.openai_auth_mode = "chatgpt"
+    else:
+        settings._enableTranslation = False
+        instance.speak(["Translation disabled"])
+        settings._enableTranslation = True
+    instance.speak(["Second"])
+    assert calls == ["First", "Second"]
+
+
+def test_non_account_errors_do_not_delay_retry(manager: ManagerFixture) -> None:
+    """Zwykły błąd bez metadanych przerwy nie blokuje kolejnego tłumaczenia."""
+    instance, settings, spoken = manager
+    namespace = instance.translate.__globals__
+    calls = []
+
+    def translate(text: str, options: dict) -> str:
+        calls.append(text)
+        if len(calls) == 1:
+            raise namespace["TranslationError"]("Błąd sieci.")
+        return "Poprawny wynik"
+
+    instance.translate_with_options = translate
+    instance.speak(["First"])
+    instance.speak(["Second"])
+    assert calls == ["First", "Second"]
+    assert spoken[-1]["speechSequence"] == ["Poprawny wynik"]
+
+
+def test_broken_settings_do_not_interrupt_original_speech(
+    manager: ManagerFixture,
+) -> None:
+    """Błąd odczytu konfiguracji pozostaje objęty ochroną mowy NVDA."""
+    instance, settings, spoken = manager
+
+    def fail() -> dict:
+        raise RuntimeError("prywatna konfiguracja")
+
+    instance.translation_options = fail
+    command = object()
+    instance.speak(["Hello", command, " "])
+    assert spoken[-1]["speechSequence"] == ["Hello", command, " "]
+    assert "prywatna" not in repr(spoken)

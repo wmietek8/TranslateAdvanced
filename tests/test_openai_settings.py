@@ -441,6 +441,21 @@ class CodexBoundary:
         self.waiting = threading.Event()
         self.cancelled = threading.Event()
         self.wait_result = True
+        self.prepare_release = None
+        self.preparing = threading.Event()
+
+    def prepare_runtime(self, *, cancel_event=None, progress=None) -> None:
+        """Symuluje przygotowanie programu przed otwarciem przeglądarki."""
+        self.calls.append(("prepare", threading.get_ident()))
+        self.preparing.set()
+        if progress:
+            progress("download", 0, 100)
+        if self.prepare_release:
+            assert self.prepare_release.wait(3)
+        if cancel_event is not None and cancel_event.is_set():
+            raise RuntimeError("Anulowano przygotowanie")
+        if progress:
+            progress("ready", 100, 100)
 
     def account(self):
         self.calls.append(("account", threading.get_ident()))
@@ -515,7 +530,7 @@ def test_explicit_login_opens_only_trusted_url_and_verifies_account_async(oauth_
     dialog.on_login(None)
     app.wx.pump_until(lambda: not dialog._busy)
     assert env.opened == [env.client.url]
-    assert [call[0] for call in env.client.calls] == ["start", "wait", "account"]
+    assert [call[0] for call in env.client.calls] == ["prepare", "start", "wait", "account"]
     assert all(call[1] != app.wx.owner for call in env.client.calls)
     home, path, thread = env.factory_calls[0]
     assert home == str(Path(env.module.globalVars.appArgs.configPath) / "TranslateAdvanced" / "codex")
@@ -620,10 +635,102 @@ def test_oauth_warning_and_installation_guidance_are_visible_without_network(gui
     dialog = module.OpenAISettingsDialog(None, gui_app.frame)
     labels = " ".join(widget.label for widget in gui_app.wx.widgets)
     assert "eksperymentalne" in labels.lower()
-    assert "https://developers.openai.com/codex/cli" in labels
+    assert "pobierze oficjalny komponent" in labels
     assert "Codex" in labels
     assert "Anuluj nie cofa logowania" in labels
     assert dialog.codex_path.name
+
+
+def test_advanced_path_is_hidden_and_survives_mode_changes(oauth_app):
+    """Schowana ścieżka pozostaje zapisana, a tryb API nie pokazuje jej nigdy."""
+    env = oauth_app
+    settings = env.app.frame.gestor_settings
+    settings.openai_codex_path = "C:/Custom/codex.exe"
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    assert dialog.advanced_toggle.shown
+    assert not dialog.codex_path.shown
+    assert not dialog.path_label.shown
+    assert dialog.codex_path.GetValue() == settings.openai_codex_path
+    dialog.advanced_toggle.SetValue(True)
+    dialog.on_advanced(None)
+    assert dialog.codex_path.shown
+    dialog.auth_choice.SetSelection(0)
+    dialog.on_auth_choice(None)
+    assert not dialog.advanced_toggle.shown
+    assert not dialog.codex_path.shown
+    dialog.on_save(None)
+    assert settings.openai_codex_path == "C:/Custom/codex.exe"
+
+
+@pytest.mark.parametrize("close_window", [False, True])
+def test_cancel_preparation_never_opens_browser(oauth_app, close_window, monkeypatch):
+    """Anulowanie pobierania i zamknięcie okna nie rozpoczynają późnego OAuth."""
+    env = oauth_app
+    finished = threading.Event()
+    call_after = env.app.wx.CallAfter
+
+    def track_delivery(callback, *args, **kwargs):
+        if callback.__name__ != "deliver":
+            return call_after(callback, *args, **kwargs)
+
+        def deliver():
+            try:
+                callback(*args, **kwargs)
+            finally:
+                finished.set()
+
+        call_after(deliver)
+
+    monkeypatch.setattr(env.app.wx, "CallAfter", track_delivery)
+    env.client.prepare_release = threading.Event()
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.on_login(None)
+    assert env.client.preparing.wait(3)
+    if close_window:
+        dialog.on_cancel(None)
+        dialog.Destroy()
+    else:
+        dialog.on_cancel_login(None)
+    env.client.prepare_release.set()
+    env.app.wx.pump_until(finished.is_set)
+    env.app.wx.drain()
+    assert not env.opened
+    assert [call[0] for call in env.client.calls] == ["prepare"]
+    if not close_window:
+        assert not dialog._busy
+        assert "cancellation" in dialog.status.GetValue()
+
+
+def test_preparation_failure_keeps_retry_available(oauth_app, monkeypatch):
+    """Awaria pobierania przywraca przycisk logowania bez ujawnienia wyjątku."""
+    env = oauth_app
+
+    def fail(**kwargs):
+        raise OSError("tajny-klucz i prywatna-sciezka")
+
+    monkeypatch.setattr(env.client, "prepare_runtime", fail)
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.on_login(None)
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    assert dialog.login_button.enabled
+    assert "tajny" not in dialog.status.GetValue()
+    assert "Nie udało się przygotować" in dialog.status.GetValue()
+    assert not env.opened
+
+
+def test_preparation_shows_safe_installer_reason(oauth_app, monkeypatch):
+    """Stały komunikat instalatora wyjaśnia rzeczywistą przyczynę odmowy."""
+    env = oauth_app
+
+    def fail(**kwargs):
+        raise env.module.RuntimeInstallError("Logowanie kontem ChatGPT wymaga 64-bitowego systemu Windows.")
+
+    monkeypatch.setattr(env.client, "prepare_runtime", fail)
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.on_login(None)
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    assert "64-bitowego" in dialog.status.GetValue()
+    assert not env.opened
 
 
 def test_model_choices_offer_only_auto_and_saved_literal_before_refresh(gui_app):
@@ -829,8 +936,8 @@ def test_missing_codex_error_does_not_echo_tokens_and_explains_installation(oaut
     dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
     dialog.on_account(None)
     env.app.wx.pump_until(lambda: not dialog._busy)
-    assert "https://developers.openai.com/codex/cli" in dialog.status.GetValue()
-    assert "path" in dialog.status.GetValue().lower()
+    assert "przygotować komponent" in dialog.status.GetValue()
+    assert "zaawansowanych" in dialog.status.GetValue().lower()
     assert "secret" not in dialog.status.GetValue()
     assert not env.client.calls
     assert not env.opened
@@ -884,10 +991,18 @@ def test_native_wx_dialog_smoke_when_wx_is_available(app_modules, monkeypatch):
             assert dialog.auth_choice.GetName()
             assert dialog.status.GetWindowStyleFlag() & wx.TE_READONLY
             assert isinstance(dialog.model_combo, wx.Choice)
+            assert not dialog.codex_path.IsShown()
             _choose_model(dialog, "native-custom-api")
             dialog.auth_choice.SetSelection(1)
             dialog.on_auth_choice(None)
             assert dialog.login_button.IsEnabled()
+            assert not dialog.codex_path.IsShown()
+            dialog.advanced_toggle.SetValue(True)
+            dialog.on_advanced(None)
+            assert dialog.codex_path.IsShown()
+            dialog.advanced_toggle.SetValue(False)
+            dialog.on_advanced(None)
+            assert not dialog.codex_path.IsShown()
             _choose_model(dialog, "native-custom-oauth")
             dialog.on_refresh_models(None)
             wx.CallLater(20, after_refresh)

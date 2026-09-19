@@ -492,6 +492,56 @@ class CodexClientTests(unittest.TestCase):
         self.assertIn('features.hooks=false', args)
         self.assertIn('features.plugins=false', args)
 
+    def test_empty_account_does_not_require_cli_or_download(self):
+        """Nowy profil pokazuje brak konta bez instalacji i bez procesu CLI."""
+        client = codex.CodexClient(str(self.home))
+        self.clients.append(client)
+        with patch.object(codex.runtime, "ensure_managed_executable") as install:
+            self.assertEqual({}, client.account())
+        install.assert_not_called()
+        self.assertEqual([], self.starts)
+
+    def test_login_uses_automatic_component_when_path_is_empty(self):
+        """Brak Codexa w PATH powoduje przygotowanie programu przed OAuth."""
+        client = codex.CodexClient(str(self.home))
+        self.clients.append(client)
+        with patch.object(codex.runtime, "find_managed_executable", return_value=None), \
+                patch.object(codex, "resolve_codex_executable", side_effect=codex.CodexError("Brak programu")), \
+                patch.object(codex.runtime, "ensure_managed_executable", return_value=str(self.exe)) as install:
+            client.prepare_runtime()
+            self.assertEqual("login-1", client.start_login()["loginId"])
+        install.assert_called_once()
+        self.assertEqual(str(self.exe), self.starts[0][0][0])
+
+    def test_saved_component_does_not_need_system_codex(self):
+        """Zapisany komponent działa przy niedostępnej instalacji systemowej."""
+        client = codex.CodexClient(str(self.home))
+        self.clients.append(client)
+        with patch.object(codex.runtime, "find_managed_executable", return_value=str(self.exe)), \
+                patch.object(codex, "resolve_codex_executable") as system_cli, \
+                patch.object(codex.runtime, "ensure_managed_executable") as install:
+            client.prepare_runtime()
+            client.start_login()
+        install.assert_not_called()
+        system_cli.assert_not_called()
+
+    def test_invalid_custom_path_does_not_silently_download(self):
+        """Świadomie wybrany program nie jest zastępowany innym po błędzie."""
+        client = self.client()
+        client._path_value = str(self.base / "missing/codex.exe")
+        with patch.object(codex.runtime, "ensure_managed_executable") as install:
+            with self.assertRaises(codex.CodexError):
+                client.prepare_runtime()
+        install.assert_not_called()
+
+    def test_cancelled_preparation_never_starts_process(self):
+        """Anulowany etap przygotowania nie uruchamia procesu ani OAuth."""
+        event = threading.Event()
+        event.set()
+        with self.assertRaises(codex.CodexError):
+            self.client().prepare_runtime(cancel_event=event)
+        self.assertEqual([], self.starts)
+
     def test_existing_unmanaged_home_is_not_adopted_or_read(self):
         self.home.mkdir()
         credential = self.home / "auth.json"

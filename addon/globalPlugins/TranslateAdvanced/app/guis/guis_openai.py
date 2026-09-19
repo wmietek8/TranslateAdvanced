@@ -15,6 +15,8 @@ import globalVars
 import ui
 import wx
 
+from ..utils.utils_codex_runtime import RuntimeInstallError
+
 if TYPE_CHECKING:
     from ..utils.utils_codex import CodexClient
 
@@ -96,6 +98,7 @@ class OpenAISettingsDialog(wx.Dialog):
         self._operation = 0
         self._login = None
         self._signed_in = None
+        self._advanced = False
         self.use_selected_provider = False
         self._codex_home = os.path.join(globalVars.appArgs.configPath, "TranslateAdvanced", "codex")
         self._mode = "chatgpt" if settings.openai_auth_mode == "chatgpt" else "api_key"
@@ -106,7 +109,7 @@ class OpenAISettingsDialog(wx.Dialog):
         self._choices = {"api_key": ["auto"], "chatgpt": ["auto"]}
         sizer = wx.BoxSizer(wx.VERTICAL)
         self._label(sizer, _("&Authentication:"))
-        self.auth_choice = wx.Choice(self, choices=[_("API key"), _("ChatGPT OAuth (Codex CLI)")])
+        self.auth_choice = wx.Choice(self, choices=[_("API key"), _("Konto ChatGPT")])
         self.auth_choice.SetName(_("Authentication"))
         self.auth_choice.SetSelection(1 if self._mode == "chatgpt" else 0)
         sizer.Add(self.auth_choice, 0, wx.ALL | wx.EXPAND, 6)
@@ -118,12 +121,16 @@ class OpenAISettingsDialog(wx.Dialog):
         sizer.Add(self.model_combo, 0, wx.ALL | wx.EXPAND, 6)
         self.refresh_button = wx.Button(self, label=_("&Refresh models"))
         sizer.Add(self.refresh_button, 0, wx.ALL, 6)
+        self.advanced_toggle = wx.CheckBox(self, label=_("Pokaż usta&wienia zaawansowane"))
+        self.advanced_toggle.SetName(_("Pokaż ustawienia zaawansowane"))
+        self.advanced_toggle.SetValue(False)
+        sizer.Add(self.advanced_toggle, 0, wx.ALL, 6)
         self.path_label = self._label(sizer, _("Codex &executable path (optional):"))
         self.codex_path = wx.TextCtrl(self, value=settings.openai_codex_path or "")
         self.codex_path.SetName(_("Codex executable path (optional)"))
-        self.codex_path.SetHelpText(_("Enter the full path to an installed codex.exe, or leave blank to find it on PATH. Do not enter an API key or token."))
+        self.codex_path.SetHelpText(_("Zostaw puste, aby dodatek sam przygotował logowanie. Podaj pełną ścieżkę do codex.exe tylko wtedy, gdy chcesz używać własnej instalacji. Nie wpisuj tu klucza API."))
         sizer.Add(self.codex_path, 0, wx.ALL | wx.EXPAND, 6)
-        self.codex_help = self._label(sizer, _("Logowanie obsługuje oficjalny program Codex. Zostaw ścieżkę pustą, jeśli jest zainstalowany. Instrukcja: https://developers.openai.com/codex/cli. Tłumaczenie przez konto ChatGPT jest eksperymentalne."))
+        self.codex_help = self._label(sizer, _("Przy pierwszym logowaniu dodatek w razie potrzeby pobierze oficjalny komponent Codex, około 103 MB. Kolejne logowania użyją zapisanej kopii. Tłumaczenie przez konto ChatGPT jest eksperymentalne."))
         login_buttons = wx.BoxSizer(wx.HORIZONTAL)
         self.login_button = wx.Button(self, label=_("&Log in to ChatGPT"))
         self.cancel_login_button = wx.Button(self, label=_("Cancel lo&gin"))
@@ -156,6 +163,7 @@ class OpenAISettingsDialog(wx.Dialog):
         self.CentreOnParent()
         self.auth_choice.Bind(wx.EVT_CHOICE, self.on_auth_choice)
         self.refresh_button.Bind(wx.EVT_BUTTON, self.on_refresh_models)
+        self.advanced_toggle.Bind(wx.EVT_CHECKBOX, self.on_advanced)
         self.login_button.Bind(wx.EVT_BUTTON, self.on_login)
         self.cancel_login_button.Bind(wx.EVT_BUTTON, self.on_cancel_login)
         self.account_button.Bind(wx.EVT_BUTTON, self.on_account)
@@ -193,12 +201,22 @@ class OpenAISettingsDialog(wx.Dialog):
         self.login_button.Enable(not self._busy and oauth and self._signed_in is not True)
         self.logout_button.Enable(not self._busy and oauth and self._signed_in is True)
         self.account_button.Enable(not self._busy and oauth)
-        for widget in (self.path_label, self.codex_path, self.codex_help):
-            widget.Show(oauth)
+        self.advanced_toggle.Show(oauth)
+        self.codex_help.Show(oauth)
+        for widget in (self.path_label, self.codex_path):
+            widget.Show(oauth and self._advanced)
         self.cancel_login_button.Enable(self._login is not None and not self._login.cancelled.is_set())
-        for widget in (self.auth_choice, self.codex_path, self.refresh_button, self.save_button, self.use_button, self.model_combo):
+        for widget in (self.auth_choice, self.advanced_toggle, self.codex_path, self.refresh_button, self.save_button, self.use_button, self.model_combo):
             widget.Enable(not self._busy)
         self.Layout()
+
+    def on_advanced(self, event: wx.CommandEvent | None) -> None:
+        """Pokazuje ręczną ścieżkę tylko na życzenie użytkownika."""
+        if self._closed or self._busy:
+            return
+        self._advanced = bool(self.advanced_toggle.GetValue())
+        self._update_controls()
+        self.Fit()
 
     def on_auth_choice(self, event: wx.CommandEvent | None) -> None:
         """Przełącza metodę logowania i jej osobny wybór modelu."""
@@ -254,13 +272,16 @@ class OpenAISettingsDialog(wx.Dialog):
                 success(result)
             else:
                 # Never expose raw exceptions: they may include keys/OAuth URLs.
-                self._set_status(failure, announce=announce)
+                detail = "\n" + _(result) if isinstance(result, str) else ""
+                self._set_status(failure + detail, announce=announce)
 
         def worker():
             try:
                 result = work()
-            except Exception:
-                wx.CallAfter(deliver, False, None)
+            except Exception as error:
+                # Instalator zwraca wyłącznie własne, stałe komunikaty bez danych konta.
+                detail = str(error) if isinstance(error, RuntimeInstallError) else None
+                wx.CallAfter(deliver, False, detail)
             else:
                 wx.CallAfter(deliver, True, result)
 
@@ -305,7 +326,7 @@ class OpenAISettingsDialog(wx.Dialog):
 
         failure = (_("Could not refresh API models. Check the selected API key, network connection and account access.")
                    if mode == "api_key" else
-                   _("Could not refresh ChatGPT models. Check the Codex executable path, log in and try again. Installation: https://developers.openai.com/codex/cli"))
+                   _("Nie udało się odświeżyć modeli ChatGPT. Sprawdź połączenie i użyj przycisku logowania, aby przygotować komponent lub ponownie zalogować konto."))
         self._run(work, success, _("Refreshing models..."), failure)
 
     def _account_status(self, account: dict, *, announce: bool = True) -> None:
@@ -357,7 +378,22 @@ class OpenAISettingsDialog(wx.Dialog):
 
         self._run(work, lambda result: self._apply_account_models(result, announce=announce),
                   _("Checking ChatGPT account..."),
-                  _("Could not check the account. Install the official native Codex executable or correct its path. Installation: https://developers.openai.com/codex/cli"), announce=announce)
+                  _("Nie udało się sprawdzić konta. Sprawdź połączenie i użyj przycisku logowania, aby przygotować komponent. Ręczna ścieżka jest dostępna w ustawieniach zaawansowanych."), announce=announce)
+
+    def _runtime_progress(self, attempt: _LoginAttempt, phase: str, done: int, total: int) -> None:
+        # Ta funkcja jest wywoływana wyłącznie przez kolejkę wx.
+        if self._closed or self._login is not attempt or attempt.cancelled.is_set():
+            return
+        if phase == "download":
+            percent = done * 100 // max(total, 1)
+            text = _("Pobieranie komponentu logowania: {percent}%. Możesz anulować.").format(percent=percent)
+        elif phase == "verify":
+            text = _("Sprawdzanie i rozpakowywanie komponentu logowania...")
+        else:
+            text = _("Komponent gotowy. Otwieranie logowania w przeglądarce...")
+        self._set_status(text, announce=False)
+        if phase != "download" or done == 0:
+            ui.message(text)
 
     def on_login(self, event: wx.CommandEvent | None) -> None:
         """Rozpoczyna jawne logowanie i pobiera modele po jego zakończeniu."""
@@ -369,6 +405,19 @@ class OpenAISettingsDialog(wx.Dialog):
         def work():
             try:
                 client = _get_client(home, path)
+                if attempt.cancelled.is_set():
+                    return None
+                try:
+                    client.prepare_runtime(
+                        cancel_event=attempt.cancelled,
+                        progress=lambda phase, done, total: wx.CallAfter(
+                            self._runtime_progress, attempt, phase, done, total,
+                        ),
+                    )
+                except Exception:
+                    if attempt.cancelled.is_set():
+                        return None
+                    raise
                 if attempt.cancelled.is_set():
                     return None
                 result = client.start_login()
@@ -413,8 +462,8 @@ class OpenAISettingsDialog(wx.Dialog):
                 self._apply_account_models(result)
 
         self._run(work, success,
-                  _("Opening sign-in in your browser. Complete sign-in there; Cancel login stops waiting."),
-                  _("Sign-in did not complete. Check the network and native Codex executable path, then retry or check the account. Installation: https://developers.openai.com/codex/cli"),
+                  _("Przygotowywanie logowania. Jeśli brakuje komponentu, zostanie pobrany automatycznie. Następnie dokończ logowanie w przeglądarce."),
+                  _("Nie udało się przygotować lub ukończyć logowania. Sprawdź połączenie, wolne miejsce i spróbuj ponownie. Jeśli podano własną ścieżkę w ustawieniach zaawansowanych, sprawdź jej poprawność."),
                   finished=finished)
 
     def on_cancel_login(self, event: wx.CommandEvent | None) -> None:

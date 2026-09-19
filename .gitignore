@@ -2,6 +2,10 @@
 __pycache__/
 *.py[cod]
 
+# Stan lokalnego pomiaru pokrycia testów
+.coverage
+.coverage.*
+
 # SCons state and generated release artifacts
 .sconsign.dblite
 *.nvda-addon

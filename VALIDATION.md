@@ -1,11 +1,12 @@
-﻿# TranslateAdvanced 2026.5 — sprawdzenia i ograniczenia
+﻿# TranslateAdvanced 2026.6 — sprawdzenia i ograniczenia
 
 Sprawdzenia wykonano na Windows 19 września 2026. Dokument opisuje wyniki prób, bez gwarancji bezbłędnego działania zewnętrznych usług w przyszłości.
 
 ## Testy automatyczne
 
-- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **408 testów oraz 148 podtestów zaliczonych**, bez pominięć.
-- Python 3.11: **407 testów oraz 148 podtestów zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
+- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **499 testów oraz 148 podtestów zaliczonych**, bez pominięć.
+- Python 3.11: **498 testów oraz 148 podtestów zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
+- Regresje 2026.6 obejmują integralność i limity rozmiarów pobierania, przekierowania HTTPS, odrzucanie dowiązań i nieoczekiwanych elementów ZIP, anulowanie także w kolejce, ponawianie po awarii, ponowne użycie komponentu, rozpoznawanie architektury, pierwszeństwo ręcznej ścieżki, zamykanie okna, skróty klawiaturowe oraz brak dodatkowych żądań po odmowie API. Sprawdzono granice czasu przerwy i reset po zmianie klucza, modelu lub metody.
 - Nowe regresje 2026.5 odtworzyły osobne żądania dla sąsiednich fragmentów wypowiedzi oraz brak parametru rozumowania Sola. Sprawdzono puste dane, białe znaki, tożsamość i kolejność komend, pamięć, granice 3000 znaków, błędne typy, awarię usługi i niezmienioną drogę innych silników.
 - Osiem nowych testów przed zmianami odtworzyło zgłoszone błędy. Następnie rozszerzono zestaw o migrację zapisanej sesji, anulowanie, spóźnione odpowiedzi, ponowne otwieranie, awarię katalogu, zmianę konta, odświeżenie tokenu, zapis katalogu i wybór silnika w oknie nadrzędnym.
 - Testy uruchamiają kod dodatku; podmienione są granice NVDA, procesów zewnętrznych i sieci. Testy automatyczne nie czytają rzeczywistych danych konta ani schowka.
@@ -19,9 +20,18 @@ uv run --no-project --python 3.11 --with pytest --with polib python -X utf8 -B -
 uv run --no-project --python 3.13 --with pytest --with wxPython python -X utf8 -B tests/live_openai_ui_smoke.py
 ```
 
-W wersji 2026.4 zmierzono pokrycie wykonywalnych linii dla 375 testów: okno OpenAI 94,2%, klient Codex 89,5%, transport odpowiedzi OAuth 90,3%, menedżer tłumaczeń 81,8%. Nie jest to nowy pomiar dla 2026.5. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
+Pokrycie wykonywalnych linii w przebiegu 2026.6: instalator komponentu 95,9%, okno OpenAI 94,0%, klient Codex 89,7%, adapter API 97,5%, menedżer tłumaczeń 83,8%. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
 
-Kontrola Ruff dla importów i niezdefiniowanych nazw obejmuje nowy moduł grupowania, jego testy oraz zmienioną próbę mowy. Nie ogłaszamy całego odziedziczonego projektu jako wolnego od wszystkich ostrzeżeń stylistycznych. Kontrola różnic Git sprawdza również białe znaki.
+Kontrola Ruff dla importów i niezdefiniowanych nazw obejmuje instalator komponentu, nowe testy i próbę API oraz moduł grupowania. Nie ogłaszamy całego odziedziczonego projektu jako wolnego od wszystkich ostrzeżeń stylistycznych. Kontrola różnic Git sprawdza również białe znaki.
+
+## Rzeczywiste próby 2026.6
+
+- Pobrano oficjalne archiwum Windows x64 `rust-v0.155.0` z `openai/codex`, zgodne z przypiętymi metadanymi wydania. Kontrole SHA-256 archiwum i pliku wykonywalnego przeszły. Zapisano wyłącznie program potrzebny klientowi; dodatkowe narzędzia wykonywania komend i konfiguracji piaskownicy nie zostały rozpakowane. Kolejna próba korzysta z zapisanej kopii.
+- Wyłączono wykrywanie systemowego Codexa i sprawdzono użycie zarządzanego komponentu: brak konta bez uruchamiania procesu, przygotowanie programu, start oficjalnego OAuth, anulowanie i zamknięcie procesu. Przeglądarka nie została otwarta.
+- Na odizolowanej kopii samego dostępu istniejącego konta ten sam komponent potwierdził konto, pobrał pięć modeli i przetłumaczył `The door is open.` na `Drzwi są otwarte.`. Nie kopiowano tokenu odświeżania i nie zezwalano na jego odnowienie. Oryginalny plik konta pozostał identyczny, a profil próby usunięto po zamknięciu procesu.
+- Próba rzeczywistego klucza API potwierdziła działanie katalogu modeli (HTTP 200), ale tłumaczenie zostało odrzucone przez usługę (HTTP 429, `credit_balance_exhausted`, `insufficient_quota`). Nie jest to wynik pozytywnego tłumaczenia ani dowód wygaśnięcia klucza.
+- `tests/live_realtime_api.py` sprawdził pełną drogę mowy przy tej odmowie: pierwsza wypowiedź około 2,076 s z katalogiem, kolejna bez dodatkowego żądania i poniżej rozdzielczości raportu 0,1 ms. Został odczytany oryginał, a błąd nie trafił do pamięci przekładów. Nie zmieniono pliku kluczy, konfiguracji ani schowka. Te liczby opisują obsługę odmowy, nie szybkość tłumaczenia API.
+- Powtarzalna próba po zapewnieniu dostępnego salda: `tests/live_realtime_api.py --api-file <apis.json> --index 0 --model auto --output <raport.json>`. Skrypt wysyła najwyżej trzy krótkie teksty testowe, a po odmowie sprawdza przerwę i kończy pracę. Raporty lokalne nie zawierają klucza ani surowych odpowiedzi błędów.
 
 ## Rzeczywiste pomiary 2026.5
 
@@ -51,7 +61,8 @@ Sprawdzono komendę NVDA, białe znaki, historię oraz ponowny odczyt katalogu b
 - Nie przeprowadzono pełnego nowego logowania użytkownika przez przeglądarkę. Sprawdzenie startu/anulowania oraz istniejącego dostępu nie zastępuje takiej próby.
 - `appBrand=chatgpt` wybiera oficjalną stronę powitalną ChatGPT. Ekran zgody, klient OAuth i ewentualna konfiguracja organizacji nadal należą do OpenAI/Codexa; nie obiecujemy usunięcia nazwy Codex z każdego ekranu.
 - Tryb konta korzysta z eksperymentalnego, nieudokumentowanego publicznie transportu tłumaczeń ChatGPT/Codex. Oficjalny app-server obsługuje konto i modele; tłumacz nie uruchamia wątku agenta ani narzędzi modelu. Dokumentacja: https://learn.chatgpt.com/docs/app-server.
-- Nie wykonywano nowych płatnych wywołań kluczem API OpenAI ani rzeczywistych prób wszystkich pozostałych dostawców. Zachowano ich testy deterministyczne.
+- Nie potwierdzono udanego tłumaczenia na rzeczywistym kluczu API: próba została odrzucona z przyczyny rozliczeniowej. Droga poprawnej odpowiedzi, kierunki, pamięć i grupowanie mają testy z kontrolowaną granicą HTTPS. Nie wykonywano nowych rzeczywistych prób wszystkich pozostałych dostawców.
+- Rzeczywisty komponent uruchomiono na Windows x64. Dobór wersji ARM64 i scenariusza 32-bitowego NVDA na 64-bitowym Windows sprawdzono w testach logiki; nie deklarujemy prób na fizycznym urządzeniu ARM64 lub w natywnym procesie x86.
 - Tłumaczenie w locie nadal czeka na zewnętrzną usługę. Grupowanie nie łączy tekstów rozdzielonych komendami NVDA ani osobnych wypowiedzi; może więc pozostać kilka żądań. Nie wdrożono asynchronicznej przebudowy mowy ani gwarancji szybkości DeepL.
 - Dla Sola i aliasu `gpt-5.6` ustawiono udokumentowane `reasoning.effort=none`: https://developers.openai.com/api/docs/models/gpt-5.6-sol. W realnej próbie usługa przyjęła ten parametr. Nie narzucamy go nieznanym modelom bez potwierdzenia obsługi.
 

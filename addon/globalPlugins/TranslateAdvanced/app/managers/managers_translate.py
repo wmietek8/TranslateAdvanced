@@ -18,6 +18,7 @@ from speech import *
 import re
 import os
 import time
+import hashlib
 # Carga personal
 from ..src_translations.src_google_original import TranslatorGoogle
 from ..src_translations.src_google_alternative import TranslatorGooglealternative
@@ -300,6 +301,7 @@ class GestorTranslate(
 		settings = self.frame.gestor_settings
 		if not settings._enableTranslation:
 			self._realtime_error_notice = None
+			self._realtime_retry = None
 			return text
 		if not text.strip():
 			return text
@@ -309,14 +311,25 @@ class GestorTranslate(
 			# Legacy adapters return the source on failure; retry these entries.
 			if cached and cached != text:
 				return cached
+		retry_key = None
 		try:
-			translated = self.translate_with_options(text, self.translation_options())
+			options = self.translation_options()
+			key = options.get("key")
+			fingerprint = hashlib.sha256(key.encode("utf-8", errors="replace")).digest() if isinstance(key, str) else b""
+			retry_key = (options.get("provider"), options.get("auth_mode"), options.get("model"), fingerprint, options.get("codex_path"))
+			retry = getattr(self, "_realtime_retry", None)
+			if retry and retry[0] == retry_key and time.monotonic() < retry[1]:
+				return text
+			translated = self.translate_with_options(text, options)
 		except Exception as error:
+			if isinstance(error, TranslationError) and error.retry_after and retry_key is not None:
+				self._realtime_retry = (retry_key, time.monotonic() + error.retry_after)
 			# Incoming speech must remain audible, but no secrets/text in logs.
 			logHandler.log.error("TranslateAdvanced: real-time translation failed; speaking original.")
 			self._report_realtime_error(error, appName)
 			return text
 		self._realtime_error_notice = None
+		self._realtime_retry = None
 		if settings.chkCache and translated != text:
 			settings._translationCache.setdefault(appName, {})[text] = translated
 		return translated
@@ -332,6 +345,8 @@ class GestorTranslate(
 		if isinstance(error, TranslationError):
 			# Ten wyjątek zawiera wyłącznie komunikaty zaufanego adaptera.
 			message += " " + _(str(error))
+			if error.retry_after:
+				message += " " + _("Kolejna próba tłumaczenia w locie nastąpi za minutę. Do tego czasu czytany jest oryginalny tekst.")
 		speak = getattr(self.frame.gestor_settings, "_nvdaSpeak", None)
 		if callable(speak):
 			speak(speechSequence=[message], priority=None)
@@ -345,6 +360,8 @@ class GestorTranslate(
 		:return: None
 		"""
 		if not self.frame.gestor_settings._enableTranslation:
+			self._realtime_retry = None
+			self._realtime_error_notice = None
 			return self.frame.gestor_settings._nvdaSpeak(speechSequence=speechSequence, priority=priority)
 
 		settings = self.frame.gestor_settings

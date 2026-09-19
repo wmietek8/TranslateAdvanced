@@ -14,6 +14,7 @@ https://developers.openai.com/api/docs/guides/structured-outputs
 import http.client
 from collections import Counter
 import json
+import math
 import re
 import ssl
 import urllib.error
@@ -30,10 +31,21 @@ _MAX_TRANSLATION_REQUESTS = 32
 
 
 class TranslationError(RuntimeError):
-    """A user-safe failure, containing neither credentials nor source text."""
+    """Bezpieczny błąd tłumaczenia z opcjonalną przerwą po odmowie usługi."""
+
+    def __init__(self, message: str, *, retry_after: float = 0.0) -> None:
+        """Przyjmuje komunikat bez sekretów i przerwę z zakresu 0–300 sekund."""
+        if not isinstance(message, str):
+            raise TypeError("Komunikat błędu musi być tekstem.")
+        if isinstance(retry_after, bool) or not isinstance(retry_after, (int, float)):
+            raise TypeError("Przerwa musi być liczbą sekund.")
+        if not 0 <= retry_after <= 300 or not math.isfinite(retry_after):
+            raise ValueError("Przerwa musi należeć do zakresu 0–300 sekund.")
+        super().__init__(message)
+        self.retry_after = float(retry_after)
 
 
-def _http_error_message(status):
+def _http_error_message(status, code="", error_type=""):
     if 300 <= status <= 399:
         return "OpenAI redirect refused to protect account credentials."
     if status == 401:
@@ -43,10 +55,32 @@ def _http_error_message(status):
     if status == 404:
         return "The selected OpenAI model is unavailable for this account."
     if status == 429:
+        if code in ("credit_balance_exhausted", "insufficient_quota", "billing_hard_limit_reached") or error_type == "insufficient_quota":
+            return (
+                "Brak dostępnych środków lub limitu wydatków OpenAI API. "
+                "Sprawdź saldo i rozliczenia organizacji powiązanej z kluczem. "
+                "Abonament ChatGPT nie zasila salda API."
+            )
         return "OpenAI rate limit or quota exceeded. Check billing or try later."
     if 500 <= status <= 599:
         return "OpenAI is temporarily unavailable. Try again later."
     return "OpenAI rejected the request. Check the selected model and input length."
+
+
+def _http_error_details(error: urllib.error.HTTPError) -> tuple[str, str]:
+    """Odczytuje tylko kody błędu, bez publikowania treści odpowiedzi serwera."""
+    try:
+        raw = error.read(65537)
+        if len(raw) > 65536:
+            return "", ""
+        data = _decode_json(raw.decode("utf-8"))
+        detail = data.get("error") if isinstance(data, dict) else None
+        if isinstance(detail, dict):
+            code, kind = detail.get("code"), detail.get("type")
+            return code if isinstance(code, str) else "", kind if isinstance(kind, str) else ""
+    except (OSError, http.client.HTTPException, ValueError, TranslationError):
+        pass
+    return "", ""
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -94,8 +128,13 @@ def _request_json(api_key, path, body=None):
             raise TranslationError("OpenAI returned a response that is too large.")
         return _decode_json(raw.decode("utf-8"))
     except urllib.error.HTTPError as error:
-        error.close()
-        raise TranslationError(_http_error_message(error.code)) from None
+        try:
+            code, kind = _http_error_details(error)
+            message = _http_error_message(error.code, code, kind)
+        finally:
+            error.close()
+        pause = 60 if error.code in (401, 403, 429) else 0
+        raise TranslationError(message, retry_after=pause) from None
     except (TimeoutError, urllib.error.URLError, OSError, http.client.HTTPException) as error:
         reason = getattr(error, "reason", error)
         if isinstance(reason, TimeoutError):
