@@ -315,10 +315,12 @@ class OpenAIAPITests(unittest.TestCase):
         self.assertTrue(callable(getattr(backend, "list_openai_models", None)),
                         "Expose the model catalog helper for the settings UI")
         allowed = ["gpt-6-astra", "gpt-5.6-luna", "gpt-4.1-mini", "o3", "gpt-7.2-preview",
+                   "gpt-realtime-1.5", "gpt-realtime-2.1", "gpt-realtime-2.1-mini",
                    "ft:gpt-4.1-mini-2025-04-14:org:translation:id"]
         excluded = ["text-embedding-3-large", "whisper-1", "gpt-image-1", "gpt-4o-audio-preview",
                     "gpt-4o-mini-tts", "gpt-4o-realtime-preview", "gpt-4o-transcribe",
-                    "omni-moderation-latest", "gpt-4o-search-preview", "dall-e-3"]
+                    "omni-moderation-latest", "gpt-4o-search-preview", "dall-e-3",
+                    "gpt-realtime-translate", "gpt-realtime-whisper"]
         payload = {"object": "list", "data": [{"id": name} for name in allowed + excluded + allowed]}
         for query in [backend.list_openai_models, backend.TranslatorOpenAI().list_openai_models]:
             with mock.patch.object(backend, "_urlopen", return_value=http_response(payload)) as transport:

@@ -108,6 +108,19 @@ class GestorTranslate(
 			return None, None
 		return entry.get("key"), entry.get("url")
 
+	def prepare_translation(self) -> None:
+		"""Przygotowuje tekstowe Realtime bez blokowania NVDA i generowania odpowiedzi."""
+		settings = self.frame.gestor_settings
+		if (settings.choiceOnline != 9 or getattr(self.frame, "_terminating", False)
+				or getattr(settings, "openai_auth_mode", "api_key") != "api_key"):
+			return
+		model = getattr(settings, "openai_model_api", "auto")
+		if model not in ("gpt-realtime-1.5", "gpt-realtime-2.1", "gpt-realtime-2.1-mini"):
+			return
+		from ..utils.utils_openai_realtime import prepare_realtime
+		key, _url = self.get_api()
+		prepare_realtime(key, model)
+
 	def procesar_listas(self, origen, destino):
 		"""
 		Procesa dos listas para unificar sus cadenas de texto, eliminar los espacios al final de cada cadena,

@@ -3075,3 +3075,12 @@ msgstr "Program w archiwum przekracza dozwolony rozmiar."
 
 msgid "Za dużo oczekujących tłumaczeń. Odczytano oryginalne komunikaty."
 msgstr "Za dużo oczekujących tłumaczeń. Odczytano oryginalne komunikaty."
+
+msgid ""
+"Do szybkich rozmów i tłumaczenia schowka wybierz gpt-realtime-2.1. Realtime "
+"używa klucza API i przesyła wyłącznie tekst. Jeśli nie ma go na liście, użyj"
+" Odśwież modele."
+msgstr ""
+"Do szybkich rozmów i tłumaczenia schowka wybierz gpt-realtime-2.1. Realtime "
+"używa klucza API i przesyła wyłącznie tekst. Jeśli nie ma go na liście, użyj"
+" Odśwież modele."

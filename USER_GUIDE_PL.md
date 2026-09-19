@@ -1,10 +1,24 @@
-# TranslateAdvanced 2026.7: konto ChatGPT, modele i tłumaczenie w locie
+# TranslateAdvanced 2026.8: konto ChatGPT, modele i tłumaczenie w locie
+
+## OpenAI do rozmów w Life in Nature
+
+W ustawieniach OpenAI wybierz **Klucz API → Odśwież modele → gpt-realtime-2.1 → Używaj tego silnika**. Wybrany model jest zapamiętywany. Lista jest standardową kontrolką rozwijaną, dostępną dla NVDA. Aktualizacja zachowuje dotychczasowy model, dlatego ten wybór trzeba wykonać raz. `auto`, Terra i Sol nadal używają swojej dotychczasowej ścieżki.
+
+Model Realtime tłumaczy zwykły tekst przez utrzymywane połączenie. Dodatek przygotowuje je w tle przy uruchomieniu, zapisaniu wybranego silnika i włączeniu tłumaczenia. Nie wysyła mikrofonu ani dźwięków gry. Każdy tekst stanowi osobne żądanie bez historii poprzedniej rozmowy. Równoczesne wiadomości gry i schowek mogą używać osobnych połączeń, maksymalnie trzech. Pierwsze zestawienie połączenia lub jego odnowienie może potrwać dłużej.
+
+W 24 pomiarach syntetycznych wiadomości pełne tłumaczenie czatu wracało po **0,38–0,74 s**, a wynik polecenia schowka po **0,40–0,55 s**, przy gotowym połączeniu. Mediany wyniosły odpowiednio **0,55 s** i **0,47 s**. To pomiary z rzeczywistym kluczem API i pętlą wx, bez czasu syntezatora i bez odsłuchu rzeczywistej gry. Nie stanowią gwarancji czasu odpowiedzi usługi.
+
+Dla wiadomości przychodzących ustaw język docelowy OpenAI na **polski** i włącz **NVDA+Shift+T**. Dla własnych wiadomości włącz automatyczną zamianę języka: główny **polski**, alternatywny **angielski**. Skopiuj tekst, użyj **NVDA+Shift+C**, a po otrzymaniu przekładu wklej **Ctrl+V**. Schowek otrzymuje wyłącznie kompletną odpowiedź; urwanie transmisji lub skopiowanie nowego tekstu chroni poprzednią zawartość.
+
+Realtime korzysta z płatnego **OpenAI API**, niezależnie od abonamentu ChatGPT. Obowiązują ceny tokenów tekstowych wybranego modelu; `gpt-realtime-2.1` nie kosztuje tyle samo co Terra lub Luna. Dostępność sprawdza lista modeli konta. Obsługiwane są również `gpt-realtime-1.5` i `gpt-realtime-2.1-mini`, jednak w próbie mini wystąpiło pozostawienie angielskiego tekstu bez tłumaczenia, dlatego do tych rozmów zalecany jest pełny model. Kontrolowany zestaw zdań nie dowodzi bezbłędności ani ogólnej przewagi jakości nad innymi tłumaczami.
+
+Dokumentacja: [tekst i oddzielne odpowiedzi Realtime](https://developers.openai.com/api/docs/guides/realtime-conversations), [model i rozliczanie](https://developers.openai.com/api/docs/models/gpt-realtime-2.1).
 
 To społecznościowy fork dodatku autorstwa Héctora J. Beníteza Corredera (hxebolax), rozwijany przez Axela (wmietek8). Oryginalne autorstwo i licencja GNU GPL v2 pozostają zachowane. Kod źródłowy: https://github.com/wmietek8/TranslateAdvanced. Szczegóły zmian są w `MODIFICATIONS.md`.
 
 ## Instalacja bez tracenia obecnych ustawień
 
-Otwórz paczkę `TranslateAdvanced-2026.7.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
+Otwórz paczkę `TranslateAdvanced-2026.8.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
 
 Sama paczka nie zawiera kluczy API ani zalogowanego konta. Przekazanie jej znajomym nie przekazuje dostępu do Twoich usług. Każdy konfiguruje swoje konto lub swój klucz.
 
@@ -13,7 +27,7 @@ Przy lokalnej pracy nad tym projektem agent po testach i zbudowaniu paczki aktua
 ## Polski na angielski i angielski na polski
 
 1. W menu NVDA otwórz ustawienia Traductor Avanzado / Tłumacza zaawansowanego.
-2. Zostaw wybrany własny silnik, np. **DeepL API Pro**, oraz jego działający klucz.
+2. Wybierz **OpenAI (API / ChatGPT OAuth)**, metodę **klucz API** oraz model **gpt-realtime-2.1**, zgodnie z instrukcją powyżej.
 3. Włącz automatyczną zamianę języka i ustaw język główny na **polski**, a alternatywny na **angielski**. Korzystamy z istniejących ustawień głównego i alternatywnego języka; nie ma drugiej, ukrytej pary.
 4. Skopiuj wiadomość i naciśnij **NVDA+Shift+C**. Klawiszem NVDA może być Insert albo Caps Lock, zależnie od Twojej konfiguracji.
 5. Po otrzymaniu odpowiedzi dodatek najpierw zastępuje schowek gotowym tłumaczeniem, a następnie przekazuje dokładnie ten sam tekst do wypowiedzenia przez NVDA. Możesz od razu wkleić go przez Ctrl+V.
@@ -43,7 +57,7 @@ Nowa wspólna ścieżka obsługuje tekst do **24 000 znaków**. Dłuższy tekst 
 4. Użyj **Odśwież modele**, aby pobrać listę dostępną dla tego klucza. Wybierz model ze zwykłej listy rozwijanej albo pozostaw `auto`.
 5. **Zapisz** zachowuje ustawienia. **Używaj tego silnika** dodatkowo ustawia OpenAI jako silnik tłumaczenia. Główne okno pokazuje wtedy właściwy wybór.
 
-Tryb API używa publicznego OpenAI Responses API i jest rozliczany oddzielnie od abonamentu ChatGPT. Sam abonament ChatGPT nie zapewnia środków na API. Lista `/models` wskazuje widoczne modele, ale nie jest gwarancją, że każdy z nich obsługuje wymagany format odpowiedzi lub że konto ma dostępne środki.
+Tryb API używa publicznego OpenAI Responses API lub tekstowego Realtime API dla obsługiwanych modeli `gpt-realtime-*` i jest rozliczany oddzielnie od abonamentu ChatGPT. Sam abonament ChatGPT nie zapewnia środków na API. Lista `/models` wskazuje widoczne modele, ale nie jest gwarancją, że każdy z nich obsługuje wymagany format odpowiedzi lub że konto ma dostępne środki.
 
 Domyślne **auto** wybiera dostępny model z zalecanej listy. Dla API pierwszą propozycją jest `gpt-5.6-luna`: OpenAI opisuje go jako model do zadań o dużej liczbie żądań i niskim koszcie. To praktyczny wybór do krótkich wiadomości, nie twierdzenie, że wygrywa każdy test tłumaczenia. `gpt-6-astra` można wybrać ręcznie, jeśli konto go udostępnia; większy model nie zawsze jest wart dodatkowego czasu i kosztu przy jednym zdaniu z czatu. Wybrany jawnie model nie jest po błędzie po cichu podmieniany na inny.
 
@@ -68,13 +82,13 @@ Nazwa integracji przekazywana przez dodatek to **TranslateAdvanced**, ale **klie
 
 W 2026.7 tłumaczenie przez OpenAI i DeepL API nie zatrzymuje głównego wątku NVDA: można dalej używać klawiatury i przerywać mowę. Odpowiedzi zachowują kolejność, a anulowane komunikaty nie wracają po spóźnionej odpowiedzi serwera. Identyczne oczekujące teksty korzystają z jednego zapytania. Przy włączonej pamięci tłumaczeń powtórzone menu jest odczytywane bez czekania na sieć. Stare wersje NVDA bez powiadomienia `pre_speechCanceled` zachowują wcześniejszą obsługę synchroniczną.
 
-**Do dynamicznej gry, np. Life in Nature, wybierz DeepL Pro w głównych ustawieniach dodatku i pozostaw włączoną pamięć tłumaczeń.** W wykonanej próbie sześciu krótkich tekstów DeepL potrzebował 0,27–0,44 s, a Terra przez doładowany klucz API 1,11–1,44 s. To pomiar syntetycznych komunikatów menu, zadania i serwera, bez odsłuchu rzeczywistej gry. Samo doładowanie API nie gwarantuje szybkości DeepL. OpenAI nadal może służyć do tłumaczenia tekstów, przy których takie oczekiwanie jest akceptowalne. Wyboru silnika dokonujesz w ustawieniach; aktualizacja nie przełącza go automatycznie.
+Do dynamicznych rozmów przez OpenAI użyj `gpt-realtime-2.1`, zgodnie z instrukcją na początku tej pomocy. Pozostaw włączoną pamięć tłumaczeń: powtórzone menu może być odczytane bez sieci. Wyniki wcześniejszej próby Terry i DeepL pozostają w VALIDATION.md jako pomiary historyczne.
 
 Dla Terry także ustawiono brak dodatkowego rozumowania. Seria wiadomości ma maksymalnie 32 oczekujące wypowiedzi; po przekroczeniu limitu dodatku NVDA odczyta oryginały w kolejności i zgłosi przeciążenie. Ta ochrona zapobiega nieograniczonej kolejce, ale nie przyspiesza samej usługi.
 
 Od wersji 2026.5 sąsiednie fragmenty tekstu w jednej wypowiedzi NVDA są łączone w jedno żądanie OpenAI, do 3000 znaków. Komendy zmiany języka, głosu i indeksu pozostają granicami grup, a zapamiętane tłumaczenia są używane ponownie. Nie łączymy osobnych wypowiedzi ani tekstu z różnych aplikacji. Dla `gpt-5.6-sol`, aliasu `gpt-5.6` oraz Luny wyłączone jest dodatkowe rozumowanie.
 
-W próbie trzech etykiet interfejsu poprzednia wersja wysyłała trzy kolejne żądania i potrzebowała 8,55 sekundy. Po poprawce Sol wysyłał jedno żądanie, z wynikami 1,70–3,93 sekundy w trzech powtórzeniach. Luna nie uzyskała wyraźnej przewagi. To pomiar kilku krótkich tekstów, nie gwarancja czasu odpowiedzi. Szybkie łącze nie usuwa oczekiwania na usługę; przy nawigacji wymagającej natychmiastowej reakcji sprawdzający się u użytkownika DeepL może być praktyczniejszy. Model i silnik wybrane przez użytkownika nie są automatycznie zmieniane.
+W próbie trzech etykiet interfejsu poprzednia wersja wysyłała trzy kolejne żądania i potrzebowała 8,55 sekundy. Po poprawce Sol wysyłał jedno żądanie, z wynikami 1,70–3,93 sekundy w trzech powtórzeniach. Luna nie uzyskała wyraźnej przewagi. To pomiar kilku krótkich tekstów, nie gwarancja czasu odpowiedzi. Szybkie łącze nie usuwa oczekiwania na usługę; nowa ścieżka Realtime została przygotowana do rozmów wymagających krótkiego oczekiwania. Model i silnik wybrane przez użytkownika nie są automatycznie zmieniane.
 
 Logowanie do dodatku jest oddzielone od zwykłej konfiguracji programistycznego Codexa. Dane sesji trafiają do `TranslateAdvanced/codex` w katalogu konfiguracji NVDA, nie do katalogu instalacyjnego dodatku. Wylogowanie dotyczy tej osobnej sesji. Chroń katalog konfiguracji, szczególnie przy przenośnej instalacji NVDA; może zawierać klucze i dane logowania. Nie wysyłaj go znajomym razem z dodatkiem.
 

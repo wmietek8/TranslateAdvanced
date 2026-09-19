@@ -119,6 +119,7 @@ class OpenAISettingsDialog(wx.Dialog):
         self.model_combo.SetName(_("Model"))
         self.model_combo.SetHelpText(_("Wybierz model z listy. Opcja auto dobiera dostępny model. Wybory dla konta ChatGPT i klucza API są zapisywane osobno."))
         sizer.Add(self.model_combo, 0, wx.ALL | wx.EXPAND, 6)
+        self.realtime_help = self._label(sizer, _("Do szybkich rozmów i tłumaczenia schowka wybierz gpt-realtime-2.1. Realtime używa klucza API i przesyła wyłącznie tekst. Jeśli nie ma go na liście, użyj Odśwież modele."))
         self.refresh_button = wx.Button(self, label=_("&Refresh models"))
         sizer.Add(self.refresh_button, 0, wx.ALL, 6)
         self.advanced_toggle = wx.CheckBox(self, label=_("Pokaż usta&wienia zaawansowane"))
@@ -194,6 +195,7 @@ class OpenAISettingsDialog(wx.Dialog):
 
     def _update_controls(self) -> None:
         oauth = self._mode == "chatgpt"
+        self.realtime_help.Show(not oauth)
         self.login_button.Show(oauth and self._signed_in is not True)
         self.logout_button.Show(oauth and self._signed_in is True)
         self.account_button.Show(oauth)
@@ -508,6 +510,9 @@ class OpenAISettingsDialog(wx.Dialog):
         settings.openai_codex_path = self.codex_path.GetValue().strip()
         settings.guardaConfiguracion()
         self._finish(wx.ID_OK)
+        prepare = getattr(getattr(self.frame, "gestor_translate", None), "prepare_translation", None)
+        if callable(prepare):
+            prepare()
 
     def on_use_provider(self, event: wx.CommandEvent | None) -> None:
         """Wybiera OpenAI jako silnik bez wymagania klucza dla ChatGPT."""

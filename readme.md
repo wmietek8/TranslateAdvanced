@@ -7,9 +7,9 @@
 > original copyright notices and is distributed under GNU GPL v2. See
 > `COPYING.txt` and `MODIFICATIONS.md`.
 
-## Aktualizacja 2026.7
+## Aktualizacja 2026.8
 
-Tłumaczenie w locie przez OpenAI i DeepL API działa w tle i nie zatrzymuje obsługi NVDA podczas oczekiwania na serwer. Zachowuje kolejność komunikatów gry, przerywanie mowy i natychmiastowy odczyt z pamięci. Terra ma wyłączone zbędne rozumowanie. Rzeczywiste próby pokazują przewagę DeepL przy krótkich komunikatach; dodatek sam nie zmienia wybranego dostawcy. Starszy NVDA bez powiadomienia o początku anulowania zachowuje dotychczasową obsługę. Szczegóły i wyniki: [instrukcja po polsku](USER_GUIDE_PL.md), [instrukcja po angielsku](USER_GUIDE_EN.md), [wykonane sprawdzenia](VALIDATION.md) i [dziennik zmian](DZIENNIK_PRAC.md). Obie instrukcje są dołączone do pomocy dodatku.
+Szybkie OpenAI dla czatu gry i tłumaczenia schowka: wybierz klucz API, odśwież modele i ustaw **gpt-realtime-2.1**. Nowa ścieżka utrzymuje połączenie i tłumaczy wyłącznie tekst. W 24 rzeczywistych pomiarach mediana pełnej odpowiedzi wyniosła 0,55 s dla wiadomości przychodzących i 0,47 s dla schowka, przy gotowym połączeniu. Pierwsze połączenie może trwać dłużej. Każda wiadomość ma oddzielny kontekst, a schowek otrzymuje tylko kompletny wynik. Aktualizacja zachowuje wybrany wcześniej model; nowy wybór wykonuje się raz w ustawieniach OpenAI. Instrukcje i ograniczenia: [pomoc po polsku](USER_GUIDE_PL.md), [pomoc w katalogu angielskim](USER_GUIDE_EN.md), [sprawdzenia](VALIDATION.md), [dziennik prac](DZIENNIK_PRAC.md).
 
 <h2 id="indice">Índice</h2>
 

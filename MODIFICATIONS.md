@@ -1,5 +1,13 @@
 # Modified version: attribution and change record
 
+## Wersja 2026.8 — 19 września 2026
+
+- Obsługa tekstowego OpenAI Realtime z kluczem API. Model `gpt-realtime-2.1` jest zalecany do szybkiego czatu i schowka; dostępne są także sprawdzone identyfikatory 1.5 i 2.1-mini. Lista wyświetla je tylko wtedy, gdy konto zwróci je w katalogu. Dotychczasowy wybór użytkownika pozostaje zachowany.
+- Pula najwyżej trzech połączeń rozdziela konta i modele, umożliwia równoczesną pracę mowy i schowka oraz odnawia wygasłe sesje. Przygotowanie połączenia następuje w tle, bez generowania odpowiedzi. Każde żądanie ma osobny kontekst, wyłącznie tekst i wyłączone narzędzia.
+- Modele 2.1 otrzymują wyłączone dodatkowe rozumowanie. Przyjmowany jest tylko kompletny wynik przypisany do bieżącego żądania. Fragmenty, odmowy, narzędzia, błędy i anulowane odpowiedzi nie zastępują schowka. Pozostają dotychczasowe reguły kolejki, pamięci, języka i przerwy po odmowie API.
+- Dołączono odizolowaną bibliotekę `websockets` 17.1 w czystym Pythonie, z licencją BSD 3-Clause. TLS jest sprawdzany, przekierowania odrzucane, treść i nagłówki nie są logowane. Mikrofon i dźwięki gry nie są odczytywane.
+- W 24 rzeczywistych pomiarach pełny wynik wiadomości przychodzących zajmował 0,38–0,74 s, a gest schowka 0,40–0,55 s przy przygotowanym połączeniu. Szczegóły jakości, pierwszego połączenia, równoległej serii i ograniczeń znajdują się w VALIDATION.md. Instrukcja opisuje OpenAI jako wybraną przez użytkownika drogę rozmów w Life in Nature.
+
 ## Wersja 2026.7 — 19 września 2026
 
 - Tłumaczenie mowy przez OpenAI i DeepL API odbywa się poza głównym wątkiem NVDA. Sterowanie wraca od razu, a odpowiedzi trafiają do mowy, historii i pamięci w głównym wątku, w kolejności wiadomości.

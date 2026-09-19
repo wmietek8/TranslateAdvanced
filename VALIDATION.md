@@ -1,6 +1,40 @@
-﻿# TranslateAdvanced 2026.7 — sprawdzenia i ograniczenia
+# TranslateAdvanced 2026.8 — sprawdzenia i ograniczenia
 
-Sprawdzenia wykonano na Windows 19 września 2026. Dokument opisuje wyniki prób, bez gwarancji bezbłędnego działania zewnętrznych usług w przyszłości.
+## OpenAI Realtime: rzeczywiste wiadomości i polecenie schowka
+
+Próba z 19 września 2026 użyła zapisanego, doładowanego klucza API, modelu `gpt-realtime-2.1` oraz skryptu `tests/live_openai_chat.py`. Wysyłano tylko wbudowane teksty syntetyczne. Wykonywano rzeczywisty kod menedżera, kolejki, adaptera Realtime i polecenia schowka, z natywną pętlą wxPython. Zastąpiono granicę syntezatora i systemowego schowka; nie odczytywano prywatnych wiadomości ani rzeczywistej gry.
+
+| Droga | Liczba prób | Minimum | Mediana | Maksimum |
+| --- | --- | --- | --- | --- |
+| Przychodzące wiadomości EN→PL | 12 | 0,383 s | 0,554 s | 0,743 s |
+| Polecenie schowka PL→EN | 12 | 0,397 s | 0,470 s | 0,545 s |
+
+Czasy dotyczą pełnego przekładu przy już przygotowanym połączeniu. Pierwsze połączenie trwało 1,105 s. Seria trzech wypowiedzi i jednego polecenia schowka zakończyła się w 1,529 s, obejmując przygotowanie dodatkowych połączeń. Pamięć zwracała powtórki w 0,059–0,131 ms. Główny wątek oddawał sterowanie w mniej niż 1 ms; nie jest to czas tłumaczenia.
+
+Każdy wynik był sprawdzany na granicy przekazania w głównym wątku; schowek otrzymał dokładnie jeden kompletny zapis. Sprawdzono zachowanie cyfr, nazw, adresu, komendy, negacji, emotikony xd i formatowania wielowierszowego. Zdanie będące poleceniem zmiany instrukcji zostało przetłumaczone dosłownie. Tłumaczenia różniły się stylistycznie; np. „Oddasz mi siekierę?” czasami oddano jako „Will you give me the axe?” bez wyraźnego „back”. Nie deklarujemy idealnej wierności ani ogólnej przewagi nad DeepL. Mini w poprzedniej próbie pozostawił dwa angielskie teksty bez przekładu, dlatego nie jest rekomendacją do tego zastosowania.
+
+Wcześniejsze badanie transportów objęło HTTPS Responses, prostszy format tekstowy, Chat Completions SSE oraz Responses WebSocket. Stałe HTTPS samo nie usuwało oczekiwania na model. Wyniki dla większych modeli były zmienne; nie wdrożono ukrytej zamiany Terry/Sola na inny model. Realtime jest dostępny przez jawny wybór z katalogu API. Rzeczywiste klucze i logowanie nie trafiają do raportów lub paczki.
+
+## Zasady nowej ścieżki
+
+- Najwyżej trzy połączenia; osobna sesja dla innego klucza lub modelu. Sekwencja żądań nie buduje historii rozmowy. Wyłącznie tekst, bez audio i narzędzi.
+- Przygotowanie w tle nie generuje odpowiedzi. Sesja starsza niż 55 minut lub zamknięta jest odnawiana. Błąd po wysłaniu nie powoduje automatycznego ponowienia płatnego żądania.
+- Akceptowany jest tylko response.done o statusie completed, z pasującym identyfikatorem, wiadomością asystenta i treścią tekstową. Fragmenty, odmowy, narzędzia, niepoprawny JSON, błędy i obce odpowiedzi są odrzucane. Schowek pozostaje chroniony również przez istniejącą kontrolę jego generacji i anulowania.
+- Połączenie sprawdza TLS, blokuje przekierowania, ma ograniczony czas i rozmiar. Osobny wyciszony logger biblioteki nie publikuje kluczy i rozmów. Biblioteka websockets 17.1 jest dostarczana z licencją BSD; nie zastępuje systemowych modułów. Ta ścieżka nie obsługuje systemowego proxy.
+- Publiczne Realtime API rozlicza tekst według cen modelu. Nie korzysta z abonamentu ChatGPT. Czas usługi może się zmieniać; pierwsze połączenie i nagła seria wiadomości są wolniejsze od pojedynczego żądania w gotowej sesji.
+
+Dokumentacja: [Realtime](https://developers.openai.com/api/docs/guides/realtime-conversations), [model 2.1](https://developers.openai.com/api/docs/models/gpt-realtime-2.1), [klient WebSocket](https://websockets.readthedocs.io/en/stable/reference/sync/client.html).
+
+## Testy wersji 2026.8
+
+- Python 3.13.15, natywne wxPython: **590 testów i 150 podtestów zaliczonych**.
+- Python 3.11: **589 testów i 150 podtestów zaliczonych**; jeden test natywnego wx pominięty i pokryty przebiegiem 3.13.
+- Pokrycie linii nowego adaptera Realtime: **95,2%**. Sprawdzono prawidłowe wyniki, oba kierunki, długi dokument i wspólne fragmenty, puste i błędne dane, niepełne odpowiedzi, błędy negocjacji, limity rozliczeń, limit trzech połączeń, zmianę modelu i klucza, odnowienie, równoczesny schowek i mowę, późny start podczas zamykania, przygotowanie w tle oraz zapis dostępnej listy modeli.
+- Kontrola Ruff nowych plików i kontrola różnic Git zaliczone. Testy nie zgłosiły nieobsłużonych wyjątków. Nie stanowi to gwarancji braku wszystkich możliwych usterek zewnętrznej usługi.
+
+## Poprzedni raport 2026.7
+
+﻿Sprawdzenia wykonano na Windows 19 września 2026. Dokument opisuje wyniki prób, bez gwarancji bezbłędnego działania zewnętrznych usług w przyszłości.
 
 ## Testy automatyczne
 

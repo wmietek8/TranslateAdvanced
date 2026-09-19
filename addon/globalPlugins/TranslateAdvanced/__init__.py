@@ -151,6 +151,8 @@ _("""Traductor Avanzado iniciado con errores.""")
 			logHandler.log.info(msg)
 
 		self._update(self.update)
+		if self.IS_OK:
+			self.gestor_translate.prepare_translation()
 
 	def _initialize_speech_queue(self) -> None:
 		"""Włącza kolejkę, gdy NVDA zgłasza anulowanie także przed rozpoczęciem mowy."""
@@ -175,6 +177,11 @@ _("""Traductor Avanzado iniciado con errores.""")
 				hook.unregister(manager.cancel_pending_speech)
 			manager.close_speech_queue()
 		self._cancel_clipboard_translation()
+		try:
+			from .app.utils.utils_openai_realtime import close_realtime_clients
+			close_realtime_clients()
+		except Exception:
+			pass
 		for dialog in tuple(getattr(self, "_translation_dialogs", ())):
 			dialog.on_cancel(None)
 		# Lazy import: unloading must close existing Codex children, never start one.
@@ -759,6 +766,7 @@ Desactívela para realizar esta acción.""")
 			else:
 				ui.message(_("Traducción activada."))
 				self.gestor_settings._enableTranslation = True
+				self.gestor_translate.prepare_translation()
 			if self.gestor_settings.chkCache:
 				self._cache.loadLocalCache() if self.gestor_settings._enableTranslation else self._cache.saveLocalCache()
 

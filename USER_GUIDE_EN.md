@@ -1,6 +1,6 @@
-# TranslateAdvanced 2026.7
+# TranslateAdvanced 2026.8
 
-Aktualizacja 2026.7: tłumaczenie mowy przez OpenAI i DeepL API działa w tle, zachowuje kolejność oraz anulowanie i korzysta z pamięci bez sieci. Terra ma wyłączone dodatkowe rozumowanie. Starszy NVDA bez wczesnego powiadomienia o anulowaniu zachowuje poprzednią obsługę. Wyniki pomiarów gry i instrukcja wyboru szybszego silnika znajdują się w USER_GUIDE_PL.md oraz VALIDATION.md.
+Aktualizacja 2026.8: szybkie tłumaczenie czatu i schowka przez OpenAI Realtime. Wybierz klucz API, odśwież modele, następnie wybierz `gpt-realtime-2.1` i „Używaj tego silnika”. Mediany 24 pomiarów wyniosły 0,55 s dla wiadomości i 0,47 s dla schowka przy gotowym połączeniu. Nie wysyłamy dźwięku; używane są tokeny tekstowe API. Pierwsze zestawienie połączenia może trwać dłużej. Pełna aktualna instrukcja i ograniczenia znajdują się w USER_GUIDE_PL.md oraz VALIDATION.md.
 
 Community fork of TranslateAdvanced by Héctor J. Benítez Corredera (hxebolax), maintained by Axel (wmietek8). Original notices and GNU GPL v2 remain intact. This is not an official upstream release. See `COPYING.txt` and `MODIFICATIONS.md`. Source: https://github.com/wmietek8/TranslateAdvanced.
 

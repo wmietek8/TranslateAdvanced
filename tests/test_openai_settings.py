@@ -301,6 +301,21 @@ def test_save_applies_both_models_and_path_without_changing_default_provider(gui
     assert gui_app.frame.gestor_apis.get_api("openai", 0)["key"] == "test-key-not-real"
 
 
+def test_realtime_choice_is_native_persisted_and_prepared_after_save(gui_app):
+    """Wybór Realtime używa zwykłej listy, zapisuje model i przygotowuje połączenie."""
+    prepared = []
+    settings = gui_app.frame.gestor_settings
+    gui_app.frame.gestor_translate = types.SimpleNamespace(
+        prepare_translation=lambda: prepared.append((settings.choiceOnline, settings.openai_model_api)))
+    dialog = gui_app.load("guis/guis_openai").OpenAISettingsDialog(None, gui_app.frame)
+    assert isinstance(dialog.model_combo, gui_app.wx.Choice)
+    assert dialog.realtime_help.shown
+    _choose_model(dialog, "gpt-realtime-2.1")
+    dialog.on_use_provider(None)
+    assert prepared == [(9, "gpt-realtime-2.1")]
+    assert type(settings)(None).openai_model_api == "gpt-realtime-2.1"
+
+
 def test_refresh_models_is_async_scoped_and_preserves_typed_model(gui_app):
     module = gui_app.load("guis/guis_openai")
     settings = gui_app.frame.gestor_settings
