@@ -145,3 +145,5 @@
 
 - Zbudowano i sprawdzono paczkę 2026.8: 1153160 bajtów, 164 elementy, 104 pliki Pythona zgodne ze źródłami i poprawne składniowo. Potwierdzono obecność biblioteki 17.1, licencji BSD, GPL i oryginalnego autora. Paczka i 248 plików źródeł nie zawierają żadnej z pięciu kontrolowanych wartości sekretów.
 - SHA-256: `5c336d4a16a524cbed194789c60d8519ba6d5402d32e16756b83c31f6e0aea27`. Podmieniono lokalnie 71 plików i potwierdzono zgodność wszystkich 164 plików paczki. Kopia 2026.7: `%LOCALAPPDATA%\TranslateAdvanced\backups\20260919-221323-895712\TranslateAdvanced-2026.7`. Konfiguracja NVDA, plik kluczy i konto ChatGPT zachowały identyczne sumy. Nie restartowano NVDA; nowe pliki czekają na restart użytkownika.
+
+- Commit `b68df54b589147015bca6051b181d407114d1609` wypchnięto na `origin/master`. Opublikowano [wydanie 2026.8](https://github.com/wmietek8/TranslateAdvanced/releases/tag/2026.8) z paczką i plikiem SHA-256. Tag wskazuje dokładnie ten commit. Oba załączniki pobrano niezależnie z GitHuba: suma zgadza się z audytem i plikiem sumy, a wszystkie 164 pliki z aktualną lokalną instalacją. Ten wpis dokumentuje publikację i nie zmienia paczki.
