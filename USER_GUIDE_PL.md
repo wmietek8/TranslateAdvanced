@@ -8,6 +8,8 @@ Otwórz paczkę `TranslateAdvanced-2026.4.nvda-addon` i potwierdź aktualizację
 
 Sama paczka nie zawiera kluczy API ani zalogowanego konta. Przekazanie jej znajomym nie przekazuje dostępu do Twoich usług. Każdy konfiguruje swoje konto lub swój klucz.
 
+Przy lokalnej pracy nad tym projektem agent po testach i zbudowaniu paczki aktualizuje również zainstalowane pliki dodatku, zachowując kopię poprzedniej wersji poza katalogiem dodatków. Kiedy potwierdzi zakończenie podmiany, wystarczy ponownie uruchomić NVDA. Samo utworzenie paczki lub opublikowanie jej na GitHubie nie zmienia działającej instalacji.
+
 ## Polski na angielski i angielski na polski
 
 1. W menu NVDA otwórz ustawienia Traductor Avanzado / Tłumacza zaawansowanego.

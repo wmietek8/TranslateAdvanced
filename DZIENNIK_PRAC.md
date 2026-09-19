@@ -54,3 +54,13 @@
 - Opublikowano zwykłe wydanie [2026.4](https://github.com/wmietek8/TranslateAdvanced/releases/tag/2026.4) z plikami `TranslateAdvanced-2026.4.nvda-addon` i `TranslateAdvanced-2026.4.sha256`.
 - Paczkę pobrano ponownie z GitHuba do osobnego katalogu. Jej SHA-256 jest identyczne z wcześniej sprawdzonym artefaktem i opublikowanym plikiem sumy. Tag wydania wskazuje dokładnie commit kodu podany powyżej.
 - Działający NVDA nie był restartowany ani podmieniany. Użytkownik instaluje opublikowaną paczkę jako aktualizację i następnie uruchamia NVDA ponownie.
+
+## Lokalna podmiana i stała zasada na kolejne zmiany
+
+- Użytkownik zlecił automatyczną aktualizację lokalnej instalacji po zakończonych zmianach, tak aby po jego stronie pozostawał tylko restart NVDA. Zasadę zapisano w AGENTS.md, instrukcji użytkownika oraz lokalnym AGENTS.md w katalogu instalacji, kierującym do repozytorium.
+- Przed podmianą instalacja nadal miała wersję 2026.3. Samo wcześniejsze zbudowanie i opublikowanie paczki nie zmieniło plików używanych przez NVDA.
+- Sprawdzono SHA-256 opublikowanej paczki 2026.4, integralność ZIP oraz składnię wszystkich 47 plików Pythona. Nie zmieniano kodu dodatku, dlatego nie powtarzano zaliczonych wcześniej 376 testów i 144 podtestów.
+- Kopię starej instalacji zapisano lokalnie w `%LOCALAPPDATA%\TranslateAdvanced\backups\20260919-191515-249014\TranslateAdvanced-2026.3`. Pliki podmieniono z możliwością przywrócenia kopii w razie błędu; manifest wersji zastąpiono na końcu.
+- Podmieniono 19 plików i usunięto 47 plików pamięci podręcznej Pythona. Po zakończeniu wszystkie 105 plików instalacji należących do paczki są identyczne z wydaniem 2026.4. Lokalny AGENTS.md pozostaje dodatkowym plikiem instrukcji.
+- Porównanie skrótów przed i po operacji potwierdziło zachowanie konfiguracji NVDA, pliku kluczy API i logowania ChatGPT. Raport podmiany zapisano obok kopii; nie zawiera wartości kluczy ani tokenów.
+- NVDA nie został zamknięty ani zrestartowany. Nowe pliki są gotowe; użytkownik uruchamia NVDA ponownie, aby je załadować. Ta operacja nie zmienia wcześniej opublikowanej paczki ani jej sumy SHA-256.

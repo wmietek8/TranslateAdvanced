@@ -9,4 +9,5 @@
 - Konto ChatGPT nie wymaga klucza API. Ustawienia muszą rozróżniać te metody, pamiętać modele i udostępniać standardowe kontrolki dla NVDA.
 - Nigdy nie publikuj danych logowania, zawartości schowka ani prywatnej historii rozmów. Nie kopiuj SOUL.md do repozytorium ani paczki dodatku.
 - Kod rozwijaj w tym repozytorium. Katalog dodatków działającego NVDA jest instalacją; nie restartuj czytnika ekranu bez ustalenia tego z użytkownikiem.
+- Po zakończeniu zmian i wymaganych testów zbuduj paczkę oraz samodzielnie zaktualizuj lokalną instalację TranslateAdvanced. Użytkownik upoważnił do tej podmiany na stałe: ma jedynie ponownie uruchomić NVDA, bez ręcznego instalowania paczki i dodatkowych pytań. Najpierw ustal aktywny katalog dodatku, wykonaj kopię poprzednich plików poza katalogiem dodatków, zachowaj ustawienia i logowanie, a po podmianie porównaj pliki z przetestowaną paczką. Sam restart pozostaw użytkownikowi i wyraźnie poinformuj, że jest już potrzebny.
 - Gdy użytkownik zleci publikację, wykonaj commit, push i wydanie z plikiem .nvda-addon oraz sumą SHA-256 po pomyślnym sprawdzeniu zmian.
