@@ -23,7 +23,7 @@ from nvwave import playWaveFile
 import os
 import wx
 import time
-from threading import Thread
+from threading import Thread, Event
 # Carga personal
 from .app.utils.utils_translation import install_translation_fallback
 
@@ -78,6 +78,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		self.oldSpeak = None
 		# Bandera para la activación y desactivación de la capa de comandos
 		self.switch = False
+		self._terminating = False
+		self._clipboard_job = None
 		# Comprobación de almacén de certificados raíz de Windows.
 		# Si no están correctos se actualizan.
 		url = "https://www.google.com"
@@ -153,6 +155,18 @@ _("""Traductor Avanzado iniciado con errores.""")
 		"""
 		Finaliza el complemento y guarda la configuración.
 		"""
+		if getattr(self, "_terminating", False):
+			return
+		self._terminating = True
+		self._cancel_clipboard_translation()
+		for dialog in tuple(getattr(self, "_translation_dialogs", ())):
+			dialog.on_cancel(None)
+		# Lazy import: unloading must close existing Codex children, never start one.
+		try:
+			from .app.utils.utils_codex import close_clients
+			close_clients()
+		except Exception:
+			pass
 		if not hasattr(self, 'IS_OK') or not self.IS_OK:
 			# No hacer nada si el complemento aún no está completamente inicializado
 			return
@@ -529,35 +543,165 @@ Desactívela para realizar esta acción.""")
 
 	@script(gesture=None, description=_("Traduce el contenido del portapapeles"), category=_("Traductor Avanzado"))
 	def script_ClipboardTranslation(self, event):
-		"""
-		Traduce el contenido del portapapeles
-		
-		:param event: El evento que desencadena la función.
-		"""
-		
-		if self.switch: self.closeCommandsLaier()
-		if self.chk_banderas(False, True):
-			texto = self.gestor_portapapeles.get_clipboard_text()
-			# Verificar si el texto no es None, no está vacío y contiene al menos un carácter alfanumérico
-			if texto is not None and texto and any(c.isalnum() for c in texto):
-				# Verificar que el texto tenga menos de 3000 caracteres
-				if len(texto) < 3000:
-					temp = self.gestor_settings._enableTranslation
-					self.gestor_settings._enableTranslation = False
-					try:
-						result = self.gestor_translate.translate_various(texto)
-						ui.message(result)
-						if result:
-							self.gestor_portapapeles.set_clipboard_text(result)
-					finally:
-						self.gestor_settings._enableTranslation = temp
-				else: # Más de 3000 caracteres
-					self.gestor_settings._enableTranslation = False
-					self.gestor_settings.is_active_translate = True
-					LaunchThread(self, 5, texto).start()
+		"""Translate a captured clipboard asynchronously, regardless of its length."""
+		if self.switch:
+			self.closeCommandsLaier()
+		if getattr(self, "_terminating", False):
+			return
+		if self._cancel_clipboard_translation():
+			self._clipboard_message(_("La traducción fue cancelada por el usuario."))
+			return
+		# Do not use chk_banderas: live translation is allowed, and the provider
+		# request, not a synchronous Google preflight, determines connectivity.
+		settings = self.gestor_settings
+		if settings.IS_WinON or settings.is_active_translate:
+			self._clipboard_message(_("Tiene una traducción en curso. Espere a que termine."))
+			return
+		sequence = self.gestor_portapapeles.get_clipboard_sequence_number()
+		if sequence is None:
+			self._clipboard_message(_("Clipboard unavailable. Please try again."))
+			return
+		try:
+			options = self.gestor_translate.translation_options(bidirectional=True)
+		except Exception as error:
+			self._clipboard_message(_(str(error)))
+			return
+		job = self._clipboard_job = Event()
+		self._clipboard_retry = None
+		settings.is_active_translate = True
+		self._read_clipboard_for_translation(job, sequence, options)
+
+	def _clipboard_job_is_current(self, job):
+		return not (getattr(self, "_terminating", False) or job.is_set() or self._clipboard_job is not job)
+
+	def _read_clipboard_for_translation(self, job, sequence, options, attempt=0):
+		"""Retry busy reads on wx's main loop without blocking or following a new copy."""
+		if not self._clipboard_job_is_current(job):
+			return
+		self._clipboard_retry = None
+		clipboard = self.gestor_portapapeles
+		if clipboard.get_clipboard_sequence_number() != sequence:
+			self._cancel_clipboard_translation()
+			self._clipboard_message(_("Clipboard changed. Translation was not copied."))
+			return
+		text, observed_sequence = clipboard.get_clipboard_snapshot(sequence)
+		# Delayed rendering can dispatch window messages; cancellation may reenter.
+		if job.is_set() or self._clipboard_job is not job:
+			return
+		if text is None and observed_sequence is not None:
+			# The native lock caught a copy after our cheap pre-check, before Open.
+			self._cancel_clipboard_translation()
+			self._clipboard_message(_("Clipboard changed. Translation was not copied."))
+			return
+		if text is None or observed_sequence is None:
+			if attempt < 4:
+				self._clipboard_retry = wx.CallLater(50, self._read_clipboard_for_translation,
+					job, sequence, options, attempt + 1)
 			else:
-				# Muestra un mensaje indicando que no hay texto para traducir
-				ui.message(_("No hay nada para traducir en el portapapeles"))
+				self._cancel_clipboard_translation()
+				self._clipboard_message(_("Clipboard unavailable. Please try again."))
+			return
+		# No other copier can enter while the native snapshot is locked. A new
+		# generation here is delayed rendering, not a user's intervening copy.
+		sequence = observed_sequence
+		if not text or not any(c.isalnum() for c in text):
+			self._cancel_clipboard_translation()
+			self._clipboard_message(_("No hay nada para traducir en el portapapeles"))
+			return
+		translate = self.gestor_translate.translate_with_options
+
+		def worker():
+			result, error = None, None
+			try:
+				result = translate(text, options)
+			except Exception as failure:
+				error = str(failure)
+			if not job.is_set():
+				wx.CallAfter(self._finish_clipboard_translation, job, text, sequence, result, error)
+
+		try:
+			self._clipboard_thread = Thread(target=worker, daemon=True)
+			self._clipboard_thread.start()
+		except Exception as error:
+			self._finish_clipboard_translation(job, text, sequence, None, str(error))
+
+	def _cancel_clipboard_translation(self):
+		"""Invalidate both an in-flight request and any queued completion."""
+		job = getattr(self, "_clipboard_job", None)
+		if job is None:
+			return False
+		job.set()
+		self._clipboard_job = None
+		timer = getattr(self, "_clipboard_retry", None)
+		self._clipboard_retry = None
+		if timer is not None:
+			timer.Stop()
+		self.gestor_settings.is_active_translate = False
+		return True
+
+	def _clipboard_message(self, text):
+		"""Speak once without sending outgoing text back through live translation."""
+		settings = self.gestor_settings
+		enabled = settings._enableTranslation
+		try:
+			settings._enableTranslation = False
+			ui.message(text)
+		finally:
+			settings._enableTranslation = enabled
+
+	def _finish_clipboard_translation(self, job, original, sequence, result, error, attempt=0):
+		"""Main-thread commit: copy first, then history/braille and speech."""
+		if not self._clipboard_job_is_current(job):
+			return
+		self._clipboard_retry = None
+		retry_pending = False
+		try:
+			if error:
+				self._clipboard_message(_("Translation failed. Clipboard was not changed. {0}").format(_(str(error))))
+				return
+			if not isinstance(result, str) or not result.strip() or result == original:
+				self._clipboard_message(_("No se ha podido obtener la traducción de lo seleccionado."))
+				return
+			status = self.gestor_portapapeles.replace_clipboard_text(
+				original, result, sequence,
+				cancelled=lambda: job.is_set() or self._clipboard_job is not job)
+			if job.is_set() or self._clipboard_job is not job:
+				return
+			if status == "replaced":
+				self.gestor_translate.record_translation(original, result)
+				self._clipboard_message(result)
+			elif status == "changed":
+				self._clipboard_message(_("Clipboard changed. Translation was not copied."))
+			elif status == "failed":
+				# A native publish failed and restoration advanced the generation.
+				# Retrying must not confuse our rollback with a user's new copy.
+				self._clipboard_message(_("Clipboard unavailable. Translation was not copied."))
+			elif attempt < 4:
+				self._clipboard_retry = wx.CallLater(50, self._finish_clipboard_translation,
+					job, original, sequence, result, error, attempt + 1)
+				retry_pending = True
+			else:
+				self._clipboard_message(_("Clipboard unavailable. Translation was not copied."))
+		finally:
+			if not retry_pending and self._clipboard_job is job:
+				self._cancel_clipboard_translation()
+
+	def _speak_short_translation(self, text):
+		"""Contain strict provider failures and always release direct-command state."""
+		settings = self.gestor_settings
+		enabled = settings._enableTranslation
+		settings._enableTranslation = False
+		settings.is_active_translate = True
+		try:
+			try:
+				result = self.gestor_translate.translate_various(text)
+			except Exception:
+				# Provider exceptions can include credentials or the source text.
+				result = _("No se ha podido obtener la traducción de lo seleccionado.")
+			ui.message(result)
+		finally:
+			settings.is_active_translate = False
+			settings._enableTranslation = enabled
 
 	@script(gesture=None, description=_("Traduce el último texto verbalizado"), category=_("Traductor Avanzado"))
 	def script_speackLastTranslation(self, event):
@@ -574,11 +718,7 @@ Desactívela para realizar esta acción.""")
 			if texto is not None and texto and any(c.isalnum() for c in texto):
 				# Verificar que el texto tenga menos de 3000 caracteres
 				if len(texto) < 3000:
-					temp = self.gestor_settings._enableTranslation
-					self.gestor_settings._enableTranslation = False
-					result = self.gestor_translate.translate_various(texto)
-					ui.message(result)
-					self.gestor_settings._enableTranslation = temp
+					self._speak_short_translation(texto)
 				else: # Más de 3000 caracteres
 					self.gestor_settings._enableTranslation = False
 					self.gestor_settings.is_active_translate = True
@@ -758,15 +898,11 @@ Idioma alternativo: {}.""").format(idioma_def, idioma_alt)
 					ui.message(_("El objeto no tiene texto para traducir"))
 					return
 
-			# Deshabilita la traducción y activa el estado de traducción
-			self.gestor_settings._enableTranslation = False
-			self.gestor_settings.is_active_translate = True
-			# Verificar que el texto tenga menos de 3000 caracteres
+			# Short commands own their state until speech completes, even on failure.
 			if len(texto) < 3000:
-				result = self.gestor_translate.translate_various(texto)
-				ui.message(result)
-				self.gestor_settings.is_active_translate = False
+				self._speak_short_translation(texto)
 			else: # Más de 3000 caracteres
+				self.gestor_settings._enableTranslation = False
 				self.gestor_settings.is_active_translate = True
 				LaunchThread(self, 5, texto).start()
 
@@ -861,21 +997,29 @@ class LaunchThread(Thread):
 			Resultado:
 				Inicia el proceso de traducción del texto y maneja el diálogo de resultados.
 			"""
-			self.progress_dialog = ProgressDialog(self.frame, self.text)
-			result = self.progress_dialog.ShowModal()
-			if result == wx.ID_OK:
-				self.frame.gestor_settings.is_active_translate = False
-				if self.progress_dialog.completed:
-					if not self.progress_dialog.traduccion_resultado or self.text == self.progress_dialog.traduccion_resultado:
-						gui.messageBox(_("No se ha podido obtener la traducción de lo seleccionado."), _("Información"), wx.ICON_INFORMATION)
-						return
-					show_translation_result(self.progress_dialog.traduccion_resultado)
-				else:
+			if getattr(self.frame, "_terminating", False):
+				return
+			self.progress_dialog = None
+			try:
+				self.progress_dialog = ProgressDialog(self.frame, self.text)
+				result = self.progress_dialog.ShowModal()
+				if getattr(self.frame, "_terminating", False):
+					return
+				if result == wx.ID_OK:
+					if self.progress_dialog.completed:
+						if not self.progress_dialog.traduccion_resultado or self.text == self.progress_dialog.traduccion_resultado:
+							gui.messageBox(_("No se ha podido obtener la traducción de lo seleccionado."), _("Información"), wx.ICON_INFORMATION)
+							return
+						show_translation_result(self.progress_dialog.traduccion_resultado)
+					else:
+						gui.messageBox(_("Hubo un error en la traducción:\n\n") + _(str(self.progress_dialog.error)), _("Error"), wx.OK | wx.ICON_ERROR)
+				elif result == wx.ID_CANCEL:
+					gui.messageBox(_("La traducción fue cancelada por el usuario."), _("Cancelado"), wx.OK | wx.ICON_INFORMATION)
+			finally:
+				if self.progress_dialog is not None:
+					self.progress_dialog.Destroy()
+				elif not getattr(self.frame, "_terminating", False):
 					self.frame.gestor_settings.is_active_translate = False
-					gui.messageBox(_("Hubo un error en la traducción:\n\n") + self.progress_dialog.error, _("Error"), wx.OK | wx.ICON_ERROR)
-			elif result == wx.ID_CANCEL:
-				self.frame.gestor_settings.is_active_translate = False
-				gui.messageBox(_("La traducción fue cancelada por el usuario."), _("Cancelado"), wx.OK | wx.ICON_INFORMATION)
 
 		def show_translation_result(data):
 			"""

@@ -8,9 +8,7 @@ import addonHandler
 import wx
 import threading
 # Carga personal
-from ..src_translations.src_google_api_free import TranslatorGoogleApiFree
 from ..src_translations.src_google_tts import TextToSpeechGoogle
-from ..src_translations.src_detect import DetectorDeIdioma
 
 # Carga traducción
 addonHandler.initTranslation()
@@ -39,12 +37,28 @@ class ProgressDialog(wx.Dialog):
 		self.lang_tts = lang_tts
 		self.canceled = False
 		self.completed = False
+		self._closed = False
+		self._destroy_requested = False
+		self._cancel_event = threading.Event()
 		self.error = None
 		self.traduccion_resultado = ""
-		if self.tts:
-			self.translator = TextToSpeechGoogle()
-		else:
-			self.translator = TranslatorGoogleApiFree()
+		self.translator = None
+		self._startup_error = None
+		try:
+			if self.tts:
+				self.translator = TextToSpeechGoogle()
+			else:
+				# wx choices and mutable settings belong to the main thread.
+				if self.interfaz:
+					self.options = frame.gestor_translate.translation_options(
+						source=secundary_frame.choice_origen.GetStringSelection().split(' - ')[-1],
+						target=secundary_frame.choice_destino.GetStringSelection().split(' - ')[-1],
+					)
+				else:
+					self.options = frame.gestor_translate.translation_options(bidirectional=True)
+				self._translate = frame.gestor_translate.translate_with_options
+		except Exception as error:
+			self._startup_error = str(error)
 
 		# Crear widgets
 		self.progress_bar = wx.Gauge(self, range=100)
@@ -58,92 +72,115 @@ class ProgressDialog(wx.Dialog):
 
 		# Bindings
 		self.cancel_button.Bind(wx.EVT_BUTTON, self.on_cancel)
+		self.Bind(wx.EVT_CLOSE, self.on_cancel)
+		self.Bind(wx.EVT_WINDOW_DESTROY, self._on_destroy)
 
 		self.CenterOnScreen()
 
+		# Keep pending dialogs cancellable when the plug-in unloads.
+		if not hasattr(frame, "_translation_dialogs"):
+			frame._translation_dialogs = set()
+		frame._translation_dialogs.add(self)
 		# Iniciar hilo de traducción
-		self.translate_thread = threading.Thread(target=self.translate_text, daemon=True)
-		self.translate_thread.start()
+		try:
+			self.translate_thread = threading.Thread(target=self.translate_text, daemon=True)
+			self.translate_thread.start()
+		except Exception as error:
+			wx.CallAfter(self._translation_finished, None, str(error))
 
 	def on_cancel(self, event):
-		"""
-		Maneja el evento de cancelación de la traducción.
-
-		:param event: Evento de botón.
-		"""
+		"""Cancel without joining a possibly blocked network request."""
+		if self._closed:
+			return
 		self.canceled = True
-		self.translator.stop()
-		wx.CallAfter(self.progress_bar.SetValue, 0)
-		wx.CallAfter(self.onFinish)
+		self._cancel_event.set()
+		try:
+			if self.translator is not None:
+				self.translator.stop()
+		finally:
+			self.onFinish()
 
 	def translate_text(self):
-		"""
-		Hilo que maneja la traducción del texto.
-		"""
-		if self.tts:
-			self.traduccion_resultado = self.translator.obtener_audio(
-				self.texto_a_traducir,
-				self.lang_tts,
-				mostrar_progreso=True,
-				ventana_padre=self.secundary_frame,
-				widget=self.update_progress,
-			)
-		else:
-			if self.interfaz:
-				self.traduccion_resultado = self.translator.translate_google_api_free(
-					lang_from=self.secundary_frame.choice_origen.GetStringSelection().split(' - ')[-1],
-					lang_to=self.secundary_frame.choice_destino.GetStringSelection().split(' - ')[-1],
-					text=self.texto_a_traducir,
-					mostrar_progreso=True,
+		"""Provider I/O only: no wx widgets or shared settings in this worker."""
+		if self._cancel_event.is_set():
+			return
+		result, error = None, None
+		try:
+			if self._startup_error is not None:
+				raise RuntimeError(self._startup_error)
+			if self.tts:
+				result = self.translator.obtener_audio(
+					self.texto_a_traducir, self.lang_tts, mostrar_progreso=True,
 					widget=self.update_progress,
-					IS_DIALOGO=True,
 				)
+				status = self.translator.get_error()
+				if status["success"]:
+					raise RuntimeError(status["data"])
 			else:
-				if self.frame.gestor_settings.chkAltLang:
-					detector = DetectorDeIdioma()
-					resultado = detector.detectar_idioma(self.texto_a_traducir)
-					if resultado['success']:
-						idioma_detectado = resultado['data']
-						if idioma_detectado != self.frame.gestor_settings.choiceLangDestino_google_def:
-							lang_to = self.frame.gestor_settings.choiceLangDestino_google_def
-						else:
-							lang_to = self.frame.gestor_settings.choiceLangDestino_google_alt
-					else:
-						# En caso de error en la detección, usar el idioma por defecto
-						lang_to = self.frame.gestor_settings.choiceLangDestino_google_def
-				else:
-					lang_to = self.frame.gestor_settings.choiceLangDestino_google
+				result = self._translate(self.texto_a_traducir, self.options)
+		except Exception as failure:
+			error = str(failure)
+		if not self._cancel_event.is_set():
+			wx.CallAfter(self._translation_finished, result, error)
 
-				self.traduccion_resultado = self.translator.translate_google_api_free(
-					lang_from="auto",
-					lang_to=lang_to,
-					text=self.texto_a_traducir,
-					mostrar_progreso=True,
-					widget=self.update_progress,
-					IS_DIALOGO=True,
-				)
-
-		error = self.translator.get_error()
-		if not self.canceled and not error["success"]:
-			self.completed = True
-			wx.CallAfter(self.onFinish)
-		else:
-			self.error = error["data"]
-			wx.CallAfter(self.onFinish)
+	def _translation_finished(self, result, error):
+		if self._closed or self._cancel_event.is_set() or getattr(self.frame, "_terminating", False):
+			return
+		self.traduccion_resultado = result if error is None else ""
+		self.error = error
+		self.completed = error is None
+		try:
+			if self.completed:
+				self.progress_bar.SetValue(100)
+				if not self.tts:
+					self.frame.gestor_translate.record_translation(self.texto_a_traducir, result)
+		finally:
+			self.onFinish()
 
 	def update_progress(self, progreso):
-		"""
-		Actualiza la barra de progreso.
+		if not self._cancel_event.is_set():
+			wx.CallAfter(self._apply_progress, int(progreso))
 
-		:param progreso: Porcentaje de progreso.
-		"""
-		wx.CallAfter(self.progress_bar.SetValue, int(progreso))
+	def _apply_progress(self, progreso):
+		if not self._closed and not self._cancel_event.is_set() and not getattr(self.frame, "_terminating", False):
+			self.progress_bar.SetValue(max(0, min(100, progreso)))
+
+	def _release(self):
+		if self._closed:
+			return
+		self._closed = True
+		self._cancel_event.set()
+		getattr(self.frame, "_translation_dialogs", set()).discard(self)
+		if not self.interfaz and getattr(self.frame, "gestor_settings", None) is not None:
+			self.frame.gestor_settings.is_active_translate = False
+
+	def _on_destroy(self, event):
+		if event.GetEventObject() is self:
+			if not self._closed:
+				self.canceled = True
+				if self.translator is not None:
+					self.translator.stop()
+			self._release()
+			self._destroy_requested = True
+		event.Skip()
+
+	def Destroy(self):
+		if self._destroy_requested:
+			return False
+		self._destroy_requested = True
+		if not self._closed:
+			self.canceled = True
+			if self.translator is not None:
+				self.translator.stop()
+			self._release()
+		return super(ProgressDialog, self).Destroy()
 
 	def onFinish(self):
-		"""
-		Maneja el final del proceso de traducción.
-		"""
+		"""End the modal exactly once, before any queued callbacks can run."""
+		if self._closed:
+			return
+		self._release()
 		if self.IsModal():
 			self.EndModal(wx.ID_OK if not self.canceled else wx.ID_CANCEL)
 		else:
-			self.Close()
+			self.Destroy()

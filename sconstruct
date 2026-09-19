@@ -156,6 +156,11 @@ def createAddonHelp(dir):
 		readmePath = os.path.join(docsDir, buildVars.baseLanguage, "readme.md")
 		readmeTarget = env.Command(readmePath, "readme.md", Copy("$TARGET", "$SOURCE"))
 		env.Depends(addon, readmeTarget)
+	for language in ("pl", "en"):
+		source = "USER_GUIDE_{}.md".format(language.upper())
+		readmePath = os.path.join(docsDir, language, "readme.md")
+		readmeTarget = env.Command(readmePath, source, Copy("$TARGET", "$SOURCE"))
+		env.Depends(addon, readmeTarget)
 
 
 def createAddonBundleFromPath(path, dest):
@@ -292,7 +297,12 @@ modificationsTarget = env.Command(
 	"MODIFICATIONS.md",
 	Copy("$TARGET", "$SOURCE"),
 )
-env.Depends(addon, [licenseTarget, modificationsTarget])
+validationTarget = env.Command(
+	os.path.join("addon", "VALIDATION.md"),
+	"VALIDATION.md",
+	Copy("$TARGET", "$SOURCE"),
+)
+env.Depends(addon, [licenseTarget, modificationsTarget, validationTarget])
 
 langDirs = [f for f in env.Glob(os.path.join("addon", "locale", "*"))]
 

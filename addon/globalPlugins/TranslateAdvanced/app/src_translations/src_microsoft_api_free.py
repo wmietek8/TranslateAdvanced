@@ -81,7 +81,7 @@ class TranslatorMicrosoftApiFree:
 			'api-version': '3.0',
 			'includeSentenceLength': True,
 		}
-		if from_lang:
+		if from_lang and from_lang != 'auto':
 			query['from'] = from_lang
 		return f'{self.endpoint}?{urlencode(query)}'
 

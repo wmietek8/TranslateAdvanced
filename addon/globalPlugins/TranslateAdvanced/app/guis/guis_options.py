@@ -91,6 +91,7 @@ class ConfigDialog(wx.Dialog):
 		self.SetHelp(self.default_choice_lang, _("Selecciona el idioma por defecto para las traducciones. Este es el idioma principal al que se traducirán los textos por defecto. Ejemplo: Inglés - en."))
 		self.SetHelp(self.alternate_choice_lang, _("Selecciona el idioma alternativo para las traducciones. Este idioma se utilizará cuando se active la opción de intercambio automático. Ejemplo: Español - es."))
 		self.SetHelp(self.translator_choice, _("Selecciona el traductor online que deseas utilizar. Puedes elegir entre diferentes servicios de traducción disponibles."))
+		self.SetHelp(self.openai_button, _("Configure OpenAI API or ChatGPT OAuth and choose a model. Saving OpenAI preferences does not change the selected translation provider."))
 		self.SetHelp(self.api_listbox, _("Muestra las claves API disponibles para el traductor seleccionado. Las claves API permiten autenticar y utilizar los servicios de traducción."))
 		self.SetHelp(self.add_button, _("Añade una nueva clave API. Esto es necesario para utilizar servicios de traducción que requieren autenticación."))
 		self.SetHelp(self.edit_button, _("Edita la clave API seleccionada. Permite modificar los detalles de una clave API existente."))
@@ -192,6 +193,9 @@ class ConfigDialog(wx.Dialog):
 		sizer.Add(transonline, 0, wx.ALL, 10)
 		self.translator_choice = wx.Choice(panel, choices=self.frame.gestor_settings.servers_names)
 		sizer.Add(self.translator_choice, 0, wx.ALL, 10)
+		self.openai_button = wx.Button(panel, label=_("Configure &OpenAI (API / ChatGPT OAuth)..."))
+		self.openai_button.Bind(wx.EVT_BUTTON, self.on_openai_settings)
+		sizer.Add(self.openai_button, 0, wx.ALL, 10)
 
 		# Listbox para mostrar las claves API
 		apilabel = wx.StaticText(panel, label=_("&Gestor de APIS:"))
@@ -311,7 +315,7 @@ class ConfigDialog(wx.Dialog):
 
 		:param event: Evento de selección.
 		"""
-		if event.GetString() not in [_("Traductor DeepL (API Free *)"), _("Traductor DeepL (API Pro *)"), _("Traductor LibreTranslate (API *)"), _("Traductor OpenAI GPT4o-mini (API *)")]:
+		if event.GetString() not in self.frame.gestor_settings.service_map:
 			self.show_api_controls(False)
 			self.actualizar_aceleradores(False)
 			return
@@ -324,6 +328,15 @@ class ConfigDialog(wx.Dialog):
 			self.show_api_controls(False)
 			self.actualizar_aceleradores(False)
 		self.update_api_list()
+
+	def on_openai_settings(self, event):
+		from .guis_openai import OpenAISettingsDialog
+		dialog = OpenAISettingsDialog(self, self.frame, api_index=self.default_api_index["openai"])
+		try:
+			dialog.ShowModal()
+		finally:
+			dialog.Destroy()
+		self.openai_button.SetFocus()
 
 	def GetSelectionChoice(self):
 		"""
@@ -495,7 +508,7 @@ class ConfigDialog(wx.Dialog):
 		name_label = wx.StaticText(dialog, label=_("&Nombre:"))
 		name_text = wx.TextCtrl(dialog)
 		key_label = wx.StaticText(dialog, label=_("Clave &API:"))
-		key_text = wx.TextCtrl(dialog)
+		key_text = wx.TextCtrl(dialog, style=wx.TE_PASSWORD)
 
 		sizer.Add(name_label, 0, wx.ALL, 5)
 		sizer.Add(name_text, 0, wx.ALL | wx.EXPAND, 5)

@@ -11,7 +11,6 @@ import logHandler
 # Carga Python
 import os
 import re
-import ssl
 import threading
 from time import sleep
 from random import randint, choice
@@ -21,8 +20,7 @@ import urllib.request as urllibRequest
 # Carga traducción
 addonHandler.initTranslation()
 
-# Configuración para ignorar la verificación SSL
-ssl._create_default_https_context = ssl._create_unverified_context
+# Preserve Python/NVDA HTTPS certificate verification for every provider.
 
 class TranslatorGoogleApiFree:
 	"""

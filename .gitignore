@@ -11,6 +11,7 @@ __pycache__/
 addon/manifest.ini
 addon/doc/
 addon/COPYING.txt
-addon/MODIFICATIONS.md
+/addon/MODIFICATIONS.md
+/addon/VALIDATION.md
 addon/locale/*/LC_MESSAGES/*.mo
 addon/locale/*/manifest.ini

@@ -9,7 +9,6 @@ import logHandler
 # Carga Python
 import os
 import re
-import ssl
 import threading
 from time import sleep
 from random import randint, choice
@@ -20,8 +19,7 @@ import urllib.parse
 # Carga traducción
 addonHandler.initTranslation()
 
-# Configuración para ignorar la verificación SSL
-ssl._create_default_https_context = ssl._create_unverified_context
+# Preserve Python/NVDA HTTPS certificate verification for every provider.
 
 class TranslatorGoogleApiFreeAlternative:
 	"""
@@ -37,6 +35,7 @@ class TranslatorGoogleApiFreeAlternative:
 		self.latin_breaks = r'[.,!?;:]'
 		self.split_reg = re.compile(u"{arabic}|{chinese}|{latin}".format(arabic=self.arabic_breaks, chinese=self.chinese_breaks, latin=self.latin_breaks))
 		self.lang_conversion_dic = {'iw': 'he', 'jw': 'jv'}
+		self.error = {"success": False, "data": None}
 		self.headers = {
 			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'}
 		self.url = 'https://translate.googleapis.com/translate_a/single'
@@ -223,7 +222,9 @@ Error:
 		)
 		traductor.start()
 		traductor.join()  # Esperar a que el hilo termine
-		if traductor.error["success"]:
+		# Publish every completed request's status, including recovery from errors.
+		self.error = traductor.error
+		if self.error["success"]:
 			msg = \
 _("""Error en la traducción.
 
@@ -234,6 +235,10 @@ Error:
 			return text
 
 		return traductor.translation
+
+	def get_error(self):
+		"""Return the last request's error status, as in TranslatorGoogleApiFree."""
+		return self.error
 
 	class TraductorHilo(threading.Thread):
 		"""

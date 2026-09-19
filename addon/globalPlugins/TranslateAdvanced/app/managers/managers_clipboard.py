@@ -7,6 +7,7 @@ import addonHandler
 import logHandler
 # Carga Python
 import wx
+from ..utils.utils_clipboard_win32 import Win32Clipboard
 import threading
 from time import sleep
 
@@ -28,63 +29,84 @@ class ClipboardMonitor:
 		self.last_content = ""
 		self._running = False
 		self._initial_check = True
+		self._native_clipboard = None
+
+	@staticmethod
+	def _clipboard_owner():
+		# GlobalPlugin is not a wx window; NVDA's main frame is our owned HWND.
+		import gui
+		return gui.mainFrame.GetHandle()
+
+	def _native(self):
+		if self._native_clipboard is None:
+			self._native_clipboard = Win32Clipboard(self._clipboard_owner)
+		return self._native_clipboard
+
+	def get_clipboard_sequence_number(self):
+		"""Generation is available even when another application holds the lock."""
+		try:
+			return self._native().sequence()
+		except Exception:
+			return None
+
+	def get_clipboard_snapshot(self, expected_sequence=None):
+		"""Capture text and its rendered generation under a real Win32 lock.
+
+		(None, None) means unavailable. (None, generation) rejects a copy before
+		acquiring the lock. Delayed rendering *under* the lock is accepted and
+		establishes the generation for the final compare-and-replace.
+		"""
+		try:
+			return self._native().snapshot(expected_sequence)
+		except Exception:
+			return None, None
 
 	def get_clipboard_text(self):
-		"""
-		Obtiene el texto actual del portapapeles, si está disponible.
-
-		:return: El texto del portapapeles o None si no hay texto disponible.
-		"""
-		clipboard = wx.Clipboard.Get()
-		try:
-			clipboard.Open()
-		except Exception as e:
-			logHandler.log.error(_("Error al abrir el portapapeles: {0}").format(e))
-			sleep(0.10)
-			try:
-				clipboard.Open()
-			except Exception as e:
-				logHandler.log.error(_("Error persistente al abrir el portapapeles: {0}").format(e))
-				return None
-		try:
-			if clipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
-				text_data = wx.TextDataObject()
-				clipboard.GetData(text_data)
-				return text_data.GetText()
-			return None
-		finally:
-			clipboard.Close()
+		"""Read Unicode text without sleeping/retrying on the NVDA thread."""
+		return self.get_clipboard_snapshot()[0]
 
 	def set_clipboard_text(self, text):
-		"""
-		Copia el texto proporcionado al portapapeles.
-
-		:param text: El texto que se va a copiar al portapapeles.
-		"""
+		"""Copy text, returning whether SetData actually succeeded."""
 		clipboard = wx.Clipboard.Get()
+		opened = False
 		try:
-			clipboard.Open()
-			text_data = wx.TextDataObject()
-			text_data.SetText(text)
-			clipboard.SetData(text_data)
+			opened = clipboard.Open()
+			if not opened:
+				return False
+			data = wx.TextDataObject()
+			data.SetText(text)
+			if not clipboard.SetData(data):
+				return False
 			clipboard.Flush()
-		except Exception as e:
-			logHandler.log.error(_("Error al copiar texto al portapapeles: {0}").format(e))
+			return True
+		except Exception:
+			return False
 		finally:
-			clipboard.Close()
+			if opened:
+				clipboard.Close()
+
+	def replace_clipboard_text(self, original, translated, expected_sequence=None, cancelled=None):
+		"""Compare and replace under one actual OS lock, never a wx/OLE flag."""
+		try:
+			return self._native().replace(original, translated, expected_sequence, cancelled)
+		except Exception:
+			return "unavailable"
 
 	def clear_clipboard(self):
-		"""
-		Limpia el contenido del portapapeles.
-		"""
+		"""Clear only after acquiring the clipboard; report actual success."""
 		clipboard = wx.Clipboard.Get()
+		opened = False
 		try:
-			clipboard.Open()
+			opened = clipboard.Open()
+			if not opened:
+				return False
 			clipboard.Clear()
-		except Exception as e:
-			logHandler.log.error(_("Error al limpiar el portapapeles: {0}").format(e))
+			return True
+		except Exception:
+			return False
 		finally:
-			clipboard.Close()
+			if opened:
+				clipboard.Close()
 
 	def has_clipboard_changed(self):
 		"""

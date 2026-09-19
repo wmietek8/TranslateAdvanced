@@ -72,6 +72,10 @@ class GestorSettings:
 		self.api_libretranslate = None
 		self.api_libretranslate_url = None
 		self.api_openai = None
+		self.openai_auth_mode = "api_key"
+		self.openai_model_api = "auto"
+		self.openai_model_oauth = "auto"
+		self.openai_codex_path = ""
 		self.chkSound = True
 		self.snd_vol = None
 		self.snd_vel = None
@@ -88,7 +92,7 @@ class GestorSettings:
 			_("Traductor DeepL (API Pro *)"),
 			_("Traductor LibreTranslate (API *)"),
 			_("Traductor Microsoft Bing (API Free)"),
-			_("Traductor OpenAI GPT4o-mini (API *)"),
+			_("OpenAI (API / ChatGPT OAuth)"),
 		]
 		self.service_map_selection = {
 			_("Traductor Google (WEB 1)"): 0,
@@ -100,13 +104,13 @@ class GestorSettings:
 			_("Traductor LibreTranslate (API *)"): 6,
 			_("Traductor Microsoft Bing (API Free)"): 7,
 			_("Traductor DeepL (Free)"): 8,
-			_("Traductor OpenAI GPT4o-mini (API *)"): 9,
+			_("OpenAI (API / ChatGPT OAuth)"): 9,
 		}
 		self.service_map = {
 			_("Traductor DeepL (API Free *)"): "deepL_free",
 			_("Traductor DeepL (API Pro *)"): "deepL_pro",
 			_("Traductor LibreTranslate (API *)"): "libre_translate",
-			_("Traductor OpenAI GPT4o-mini (API *)"): "openai",
+			_("OpenAI (API / ChatGPT OAuth)"): "openai",
 		}
 		# Diccionario para obtener el choice idiioma destino
 		self.choice_dict = {
@@ -172,6 +176,10 @@ class GestorSettings:
 			"api_libretranslate": "string(default=None)",
 			"api_libretranslate_url": "string(default=None)",
 			"api_openai": "string(default=None)",
+			"openai_auth_mode": "option('api_key', 'chatgpt', default='api_key')",
+			"openai_model_api": "string(default=auto)",
+			"openai_model_oauth": "string(default=auto)",
+			"openai_codex_path": "string(default='')",
 			"snd_vol": f"string(default={self.convertir_valor(50)})",
 			"snd_vel": "integer(default=2, min=0, max=6)",
 			"snd_rw": "integer(default=1, min=0, max=5)",
@@ -223,6 +231,10 @@ class GestorSettings:
 		self.api_libretranslate = self.convertir_valor(self.getConfig("api_libretranslate"))
 		self.api_libretranslate_url = self.getConfig("api_libretranslate_url")
 		self.api_openai = self.convertir_valor(self.getConfig("api_openai"))
+		self.openai_auth_mode = self.getConfig("openai_auth_mode")
+		self.openai_model_api = self.getConfig("openai_model_api")
+		self.openai_model_oauth = self.getConfig("openai_model_oauth")
+		self.openai_codex_path = self.getConfig("openai_codex_path")
 		self.snd_vol = self.getConfig("snd_vol")
 		self.snd_vel = self.getConfig("snd_vel")
 		self.snd_rw = self.getConfig("snd_rw")
@@ -251,6 +263,10 @@ class GestorSettings:
 		self.setConfig("api_libretranslate", self.convertir_valor(self.api_libretranslate))
 		self.setConfig("api_libretranslate_url", self.api_libretranslate_url)
 		self.setConfig("api_openai", self.convertir_valor(self.api_openai))
+		self.setConfig("openai_auth_mode", self.openai_auth_mode)
+		self.setConfig("openai_model_api", self.openai_model_api)
+		self.setConfig("openai_model_oauth", self.openai_model_oauth)
+		self.setConfig("openai_codex_path", self.openai_codex_path)
 		self.setConfig("snd_vol", self.snd_vol)
 		self.setConfig("snd_vel", self.snd_vel)
 		self.setConfig("snd_rw", self.snd_rw)

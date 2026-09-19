@@ -7,6 +7,10 @@
 > original copyright notices and is distributed under GNU GPL v2. See
 > `COPYING.txt` and `MODIFICATIONS.md`.
 
+## Update 2026.3 / Aktualizacja 2026.3
+
+New bidirectional clipboard translation and configurable OpenAI API / experimental ChatGPT OAuth. See [Polish instructions](USER_GUIDE_PL.md) and [English instructions](USER_GUIDE_EN.md). Both guides are included as NVDA add-on help. The original manual follows below.
+
 <h2 id="indice">Índice</h2>
 
 - [1 - Introducción](#introduccion)

@@ -1,3 +1,13 @@
+## 2026.3 — bidirectional clipboard and OpenAI
+
+- Translate clipboard content both ways with DeepL API/OpenAI, using the existing primary/alternate languages.
+- Keep live translation enabled; translate clipboard content asynchronously, copy before speech, protect newer clipboard copies and support cancellation.
+- Route long clipboard, file and translation-window requests through the selected provider instead of Google; document the 24,000-character limit and supported automatic-direction engines.
+- Replace the old fixed OpenAI model with Responses API, live model discovery, selectable models and an experimental isolated ChatGPT OAuth option.
+- Keep OAuth authentication in official Codex; use a no-tools HTTPS translation transport, never an agent execution turn.
+- Improve TLS verification, credential safety, strict errors, cache isolation and accessible preferences.
+- Include Polish/English instructions and expanded automated/native/live-service tests. See VALIDATION.md for the exact tested and untested boundaries.
+
 * Corregido la devolución de idiomas en configuración.
 
 • 

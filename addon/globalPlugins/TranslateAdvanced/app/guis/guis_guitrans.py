@@ -15,7 +15,6 @@ import wx
 import time
 # Carga personal
 from ..managers.managers_dict import LanguageDictionary
-from ..src_translations.src_detect import DetectorDeIdioma
 from .guis_progress import ProgressDialog
 from .guis_player import ReproductorWav
 from ..utils.utils_network import check_internet_connection
@@ -259,21 +258,14 @@ class TranslateDialog(wx.Dialog):
 			self.choice_origen.SetSelection(0)
 
 	def traducir(self, event):
-		"""
-		Maneja el evento de traducción del texto.
-
-		:param event: Evento de botón.
-		"""
-		if not check_internet_connection():
-			msg = \
-_("""No se a encontrado conexión a internet.
-
-Si esta conectado por Wifi puede que NVDA iniciara antes que se conectara.
-
-Si esta conectado por cable compruebe su conexión y asegúrese que todo esta correcto.
-
-Espere unos segundos.""")
-			gui.messageBox(msg, _("Información"), wx.ICON_INFORMATION)
+		"""Validate locally; the selected provider handles auto-detection and I/O."""
+		if getattr(self.frame, "_terminating", False):
+			return
+		text = self.texto_origen.GetValue()
+		source = self.choice_origen.GetStringSelection().split(' - ')[-1]
+		target = self.choice_destino.GetStringSelection().split(' - ')[-1]
+		if len(text) > 24000:
+			gui.messageBox(_("Translation is limited to 24000 characters."), _("Advertencia"), wx.ICON_WARNING)
 			return
 		if not self.texto_origen.GetValue().strip():
 			msg = \
@@ -287,41 +279,34 @@ _("""El texto no ha cambiado. No es necesario realizar una nueva traducción."""
 			gui.messageBox(msg, _("Información"), wx.ICON_INFORMATION)
 			return
 
-		result = DetectorDeIdioma().detectar_idioma(self.texto_origen.GetValue())
-		if result["success"]:
-			if result["data"] == self.choice_destino.GetStringSelection().split(' - ')[-1]:
-				msg = \
-_("""Se a detectado que el texto de origen es igual que el idioma destino al cual quiere traducirse.
+		if source != "auto" and source == target:
+			gui.messageBox(_("Source and target languages must be different."), _("Advertencia"), wx.ICON_WARNING)
+			return
 
-Cambie el idioma destino de traducción si desea continuar.""")
-				gui.messageBox(msg, _("Advertencia"), wx.ICON_WARNING)
+
+		self.progress_dialog = ProgressDialog(self.frame, text, interfaz=True, secundary_frame=self)
+		try:
+			result = self.progress_dialog.ShowModal()
+			if getattr(self.frame, "_terminating", False):
 				return
-		else:
-			msg = \
-_("""No a sido posible detectar el idioma del texto origen.
-
-Se va a intentar traducir, pero no se asegura el éxito de la operación.""")
-			gui.messageBox(msg, _("Advertencia"), wx.ICON_WARNING)
-
-
-		self.progress_dialog = ProgressDialog(self.frame, self.texto_origen.GetValue(), interfaz=True, secundary_frame=self)
-		result = self.progress_dialog.ShowModal()
-		if result == wx.ID_OK:
-			if self.progress_dialog.completed:
-				if not self.progress_dialog.traduccion_resultado or self.texto_origen.GetValue() == self.progress_dialog.traduccion_resultado:
-					gui.messageBox(_("No se ha podido obtener la traducción de lo seleccionado."), _("Información"), wx.ICON_INFORMATION)
-					return
-				self.texto_destino.Clear()
-				self.texto_destino.SetValue(self.progress_dialog.traduccion_resultado)
-				self.texto_destino.SetFocus()
-				self.texto_traducido_anterior = self.texto_origen.GetValue().strip()
-				self.audio_obtenido = None  # Variable para almacenar el audio obtenido previamente
-				self.texto_destino_anterior = ""  # Variable para almacenar el texto traducido previamente en destino
-				self.lang_anterior = self.choice_destino.GetStringSelection().split(' - ')[-1]
-			else:
-				gui.messageBox(_("Hubo un error en la traducción:\n\n") + self.progress_dialog.error, _("Error"), wx.OK | wx.ICON_ERROR)
-		elif result == wx.ID_CANCEL:
-			gui.messageBox(_("La traducción fue cancelada por el usuario."), _("Cancelado"), wx.OK | wx.ICON_INFORMATION)
+			if result == wx.ID_OK:
+				if self.progress_dialog.completed:
+					translated = self.progress_dialog.traduccion_resultado
+					if not translated or text == translated:
+						gui.messageBox(_("No se ha podido obtener la traducción de lo seleccionado."), _("Información"), wx.ICON_INFORMATION)
+						return
+					self.texto_destino.SetValue(translated)
+					self.texto_destino.SetFocus()
+					self.texto_traducido_anterior = text.strip()
+					self.audio_obtenido = None
+					self.texto_destino_anterior = ""
+					self.lang_anterior = target
+				else:
+					gui.messageBox(_("Hubo un error en la traducción:\n\n") + _(str(self.progress_dialog.error)), _("Error"), wx.OK | wx.ICON_ERROR)
+			elif result == wx.ID_CANCEL:
+				gui.messageBox(_("La traducción fue cancelada por el usuario."), _("Cancelado"), wx.OK | wx.ICON_INFORMATION)
+		finally:
+			self.progress_dialog.Destroy()
 
 	def escuchar_traduccion(self, event):
 		"""

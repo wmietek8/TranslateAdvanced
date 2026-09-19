@@ -16,6 +16,7 @@ import ui
 from speech import *
 # Carga estándar
 import re
+import os
 # Carga personal
 from ..src_translations.src_google_original import TranslatorGoogle
 from ..src_translations.src_google_alternative import TranslatorGooglealternative
@@ -81,51 +82,26 @@ class GestorTranslate(
 			return self.frame.gestor_settings.choiceLangDestino_libretranslate
 		elif value == 7:
 			return self.frame.gestor_settings.choiceLangDestino_microsoft
+		elif value == 9:
+			return self.frame.gestor_settings.choiceLangDestino_openai
 
 	def get_api(self):
-		"""
-		Obtiene la clave y, en algunos casos, la URL de la API según la configuración seleccionada.
-
-		Dependiendo del valor de `choiceOnline` en `gestor_settings`, esta función retorna la clave de 
-		acceso a la API correspondiente y, si aplica, la URL de la API.
-
-		Returns:
-			tuple: Una tupla que contiene la clave de la API y la URL (si aplica). Si no se encuentra 
-			la configuración de la API correspondiente, retorna (None, None).
-
-		Condiciones:
-			- Si `choiceOnline` es 4, se usa la API gratuita de DeepL.
-				- Si `api_deepl` es None, retorna (None, None).
-				- En caso contrario, retorna la clave de la API y None.
-			- Si `choiceOnline` es 5, se usa la API profesional de DeepL.
-				- Si `api_deepl_pro` es None, retorna (None, None).
-				- En caso contrario, retorna la clave de la API y None.
-			- Si `choiceOnline` es 6, se usa la API de LibreTranslate.
-				- Si `api_libretranslate` es None, retorna (None, None).
-				- En caso contrario, retorna la clave de la API y la URL de la API.
-
-		"""
-		value = self.frame.gestor_settings.choiceOnline
-		if value == 4:
-			if self.frame.gestor_settings.api_deepl is None:
-				return None, None
-			else:
-				return self.frame.gestor_apis.get_api("deepL_free", self.frame.gestor_settings.api_deepl)["key"], None
-		elif value == 5:
-			if self.frame.gestor_settings.api_deepl_pro is None:
-				return None, None
-			else:
-				return self.frame.gestor_apis.get_api("deepL_pro", self.frame.gestor_settings.api_deepl_pro)["key"], None
-		elif value == 6:
-			if self.frame.gestor_settings.api_libretranslate is None:
-				return None, None
-			else:
-				return self.frame.gestor_apis.get_api("libre_translate", self.frame.gestor_settings.api_libretranslate)["key"],  self.frame.gestor_apis.get_api("libre_translate", self.frame.gestor_settings.api_libretranslate)["url"]
-		elif value == 9: # OpenAI
-			if self.frame.gestor_settings.api_openai is None:
-				return None, None
-			else:
-				return self.frame.gestor_apis.get_api("openai", self.frame.gestor_settings.api_openai)["key"], None
+		"""Resolve only this provider's selected key, tolerating deleted entries."""
+		settings = self.frame.gestor_settings
+		if settings.choiceOnline == 9 and getattr(settings, "openai_auth_mode", "api_key") == "chatgpt":
+			return None, None
+		mapping = {4: ("deepL_free", "api_deepl"), 5: ("deepL_pro", "api_deepl_pro"),
+			6: ("libre_translate", "api_libretranslate"), 9: ("openai", "api_openai")}
+		if settings.choiceOnline not in mapping:
+			return None, None
+		service, attribute = mapping[settings.choiceOnline]
+		index = getattr(settings, attribute, None)
+		if not isinstance(index, int) or isinstance(index, bool) or index < 0:
+			return None, None
+		entry = self.frame.gestor_apis.get_api(service, index)
+		if not isinstance(entry, dict):
+			return None, None
+		return entry.get("key"), entry.get("url")
 
 	def procesar_listas(self, origen, destino):
 		"""
@@ -201,82 +177,105 @@ class GestorTranslate(
 			ui.message(_("No se a podido obtener el idioma"))
 		self.frame.gestor_settings.is_active_translate = False
 
-	def translate_various(self, text):
-		"""
-		Traduce el texto dado utilizando el servicio seleccionado actualmente y actualiza el historial de traducciones y el texto traducido más reciente.
-
-		Args:
-			text (str): El texto a traducir.
-
-		Returns:
-			str: El texto traducido si es diferente del texto original, o el texto original si no hubo cambios después de la traducción.
-			
-		Proceso:
-			1. Prepara el texto para la traducción.
-			2. Traduce el texto utilizando el traductor de Google API gratuito.
-			3. Si el texto traducido es igual al texto original (ignorando espacios en blanco al final), actualiza el último texto traducido con el texto original.
-			4. Si el soporte de braille está habilitado, muestra el mensaje del último texto traducido.
-			5. Si el texto traducido es diferente del texto original:
-				- Añade el texto original y el texto traducido al historial, si el texto original no está ya en el historial.
-				- Actualiza el último texto traducido con el texto traducido.
-				- Si el soporte de braille está habilitado, muestra el mensaje del último texto traducido.
-		"""
-		prepared = text
+	def translation_options(self, *, bidirectional=False, target=None, source=None):
+		"""Snapshot a request on the NVDA thread; never mutate shared settings."""
 		settings = self.frame.gestor_settings
-		# Use exactly the same engine as real-time translation and preserve the
-		# primary/alternate target-language behavior for direct commands.
-		target_attribute = {
-			0: "choiceLangDestino_google", 1: "choiceLangDestino_google",
-			2: "choiceLangDestino_google", 3: "choiceLangDestino_google",
-			4: "choiceLangDestino_deepl", 5: "choiceLangDestino_deepl",
-			6: "choiceLangDestino_libretranslate", 7: "choiceLangDestino_microsoft",
-			8: "choiceLangDestino_deepl", 9: "choiceLangDestino_openai",
-		}.get(settings.choiceOnline)
-		original_target = getattr(settings, target_attribute) if target_attribute else None
-		if settings.chkAltLang and target_attribute:
-			# Direct commands use the alternate target language without calling a
-			# separate language-detection service. The selected translation engine
-			# remains the only service receiving the clipboard text.
-			setattr(settings, target_attribute, settings.choiceLangDestino_google_alt)
-		translation_was_enabled = settings._enableTranslation
-		settings._enableTranslation = True
-		try:
-			translated = self.translate(prepared)
-		finally:
-			settings._enableTranslation = translation_was_enabled
-			if target_attribute:
-				setattr(settings, target_attribute, original_target)
-		if prepared.rstrip() == translated.rstrip():
-			self.frame.gestor_settings._lastTranslatedText = prepared
-			if braille.handler._get_enabled():
-				braille.handler.message(self.frame.gestor_settings._lastTranslatedText)
-			return prepared
-		else:
-			if prepared not in self.frame.gestor_settings.historialOrigen:
-				self.frame.gestor_settings.historialOrigen.appendleft(prepared)
-				self.frame.gestor_settings.historialDestino.appendleft(translated)
-				self.frame.gestor_settings._lastTranslatedText = translated
-				if braille.handler._get_enabled():
-					braille.handler.message(self.frame.gestor_settings._lastTranslatedText)
-				return translated
+		provider = settings.choiceOnline
+		if source is None:
+			# Clipboard direction detection must not inherit the real-time source.
+			source = settings.choiceLangOrigen if provider == 7 and not bidirectional else "auto"
+		key, url = self.get_api() or (None, None)
+		alternate = None
+		if bidirectional and settings.chkAltLang:
+			target = settings.choiceLangDestino_google_def
+			alternate = settings.choiceLangDestino_google_alt
+		return {
+			"provider": provider, "key": key, "url": url,
+			"target": target or self.get_choice_lang_destino(), "source": source,
+			"alternate": alternate,
+			"auth_mode": getattr(settings, "openai_auth_mode", "api_key"),
+			"model": getattr(settings, "openai_model_oauth" if getattr(settings, "openai_auth_mode", "api_key") == "chatgpt" else "openai_model_api", "auto"),
+			"codex_path": getattr(settings, "openai_codex_path", ""),
+			"codex_home": os.path.join(globalVars.appArgs.configPath, "TranslateAdvanced", "codex"),
+		}
+
+	def translate_with_options(self, text, options):
+		"""Translate using one captured provider. Errors must not become clipboard text."""
+		if not isinstance(text, str) or not text.strip():
+			raise ValueError(_("There is no text to translate."))
+		if len(text) > 24000:
+			raise ValueError(_("Translate up to 24000 characters at a time."))
+		provider, target = options["provider"], options["target"]
+		alternate, source = options["alternate"], options["source"]
+		key, url = options["key"], options["url"]
+		if provider in (4, 5, 6) and not key:
+			raise ValueError(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
+		if provider in (4, 5):
+			return self.translate_deepl(text, key, use_free_api=provider == 4,
+				source_lang=source, target_lang=target, alternate_lang=alternate, strict=True)
+		if provider == 9:
+			return self.translate_openai(key, text, target_language=target,
+				alternate_language=alternate, source_language=source, model=options["model"],
+				auth_mode=options["auth_mode"], codex_home=options["codex_home"], codex_path=options["codex_path"])
+		if alternate:
+			if provider in (0, 1, 2, 3):
+				# Google is allowed to detect only when Google itself was selected.
+				detection = DetectorDeIdioma().detectar_idioma(text)
+				if not detection.get("success"):
+					raise RuntimeError(_("Language detection failed. Clipboard was not changed."))
+				if detection["data"].lower().split("-")[0] == target.lower().split("-")[0]:
+					target = alternate
 			else:
-				self.frame.gestor_settings._lastTranslatedText = translated
-				if braille.handler._get_enabled():
-					braille.handler.message(self.frame.gestor_settings._lastTranslatedText)
-				return translated
+				raise ValueError(_("Automatic direction requires DeepL API, OpenAI or Google. Disable automatic language switching for this provider."))
+		if provider == 0:
+			result = self.translate_google(text.encode("utf-8"), to_language=target, from_language=source)
+		elif provider == 1:
+			result = self.translate_google_alternative(text.encode("utf-8"), target=target, source=source)
+		elif provider in (2, 3):
+			engine = TranslatorGoogleApiFree() if provider == 2 else TranslatorGoogleApiFreeAlternative()
+			result = engine.translate_google_api_free(lang_from=source, lang_to=target, text=text, chunksize=3000, mostrar_progreso=False)
+			if engine.get_error().get("success"):
+				raise RuntimeError(_("Translation failed. Clipboard was not changed."))
+		elif provider == 6:
+			if not url:
+				raise ValueError(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
+			result = self.translate_libretranslate(text, key, source_lang=source, target_lang=target, api_url=url)
+		elif provider == 7:
+			result = self.translate_microsoft_api_free(source, target, text)
+		elif provider == 8:
+			engine = TranslatorDeepLFree()
+			engine.source_lang, engine.target_lang = source, target
+			result = engine.translate(text)
+		else:
+			raise ValueError(_("Unknown translation provider."))
+		if isinstance(result, bytes):
+			result = result.decode("utf-8")
+		if not isinstance(result, str) or not result.strip():
+			raise RuntimeError(_("Translation returned no text."))
+		return postprocess_short_translation(text, result, target)
+
+	def record_translation(self, source, result):
+		"""Update history and braille on the main NVDA thread only."""
+		settings = self.frame.gestor_settings
+		settings._lastTranslatedText = result
+		if source.rstrip() != result.rstrip() and source not in settings.historialOrigen:
+			settings.historialOrigen.appendleft(source)
+			settings.historialDestino.appendleft(result)
+		if braille.handler._get_enabled():
+			braille.handler.message(result)
+
+	def translate_various(self, text):
+		"""Direct commands share the selected provider and automatic direction."""
+		result = self.translate_with_options(text, self.translation_options(bidirectional=True))
+		self.record_translation(text, result)
+		return result
 
 	def translate_file(self, text, func_progress):
-		"""
-		Traduce el contenido de un archivo de texto.
-
-		:param text: El texto a traducir.
-		:param func_progress: Función para mostrar el progreso de la traducción.
-		:return: El texto traducido.
-		"""
-		prepared = text
-		translated = TranslatorGoogleApiFree().translate_google_api_free(lang_from='auto', lang_to=self.frame.gestor_settings.choiceLangDestino_google, text=prepared, chunksize=3000, mostrar_progreso=True, widget=func_progress)
-		translated = postprocess_short_translation(prepared, translated, self.frame.gestor_settings.choiceLangDestino_google)
-		return translated
+		"""Files use the selected provider too, never a hidden Google fallback."""
+		func_progress(0)
+		result = self.translate_with_options(text, self.translation_options())
+		func_progress(100)
+		return result
 
 	def get_cache_app_name(self):
 		"""
@@ -286,117 +285,33 @@ class GestorTranslate(
 			app_name = globalVars.focusObject.appModule.appName
 		except:
 			app_name = "__global__"
-		return "{}_{}_{}".format(
-			app_name,
-			self.get_choice_lang_destino(),
-			self.frame.gestor_settings.choiceOnline,
-		)
+		settings = self.frame.gestor_settings
+		key = "{}_{}_{}".format(app_name, self.get_choice_lang_destino(), settings.choiceOnline)
+		if settings.choiceOnline == 9:
+			mode = getattr(settings, "openai_auth_mode", "api_key")
+			model = getattr(settings, "openai_model_oauth" if mode == "chatgpt" else "openai_model_api", "auto")
+			key += "_{}_{}".format(mode, model)
+		return key
 
 	def translate(self, text):
-		"""
-		Traduce un texto dado según la configuración actual.
-
-		:param text: El texto a traducir.
-		:return: El texto traducido.
-		"""
+		"""Real-time translation keeps its fixed target and fails back to speech."""
+		settings = self.frame.gestor_settings
+		if not settings._enableTranslation:
+			return text
 		appName = self.get_cache_app_name()
-
-		if not self.frame.gestor_settings._enableTranslation:
-			return text
-
-		if self.frame.gestor_settings.chkCache:
-			appTable = self.frame.gestor_settings._translationCache.get(appName, None)
-			if appTable is None:
-				self.frame.gestor_settings._translationCache[appName] = {}
-			translated = self.frame.gestor_settings._translationCache[appName].get(text, None)
-			if translated and translated != text:
-				return translated
-
+		if settings.chkCache:
+			cached = settings._translationCache.setdefault(appName, {}).get(text)
+			# Legacy adapters return the source on failure; retry these entries.
+			if cached and cached != text:
+				return cached
 		try:
-			if self.frame.gestor_settings._enableTranslation:
-				id = self.frame.gestor_settings.choiceOnline
-				if id == 0: # Google 1
-					prepared = text.encode('utf8')
-					translated = self.translate_google(prepared, to_language=self.frame.gestor_settings.choiceLangDestino_google)
-				elif id == 1: # Google 2
-					prepared = text.encode('utf8')
-					translated = self.translate_google_alternative(prepared, target=self.frame.gestor_settings.choiceLangDestino_google)
-				elif id == 2: # Google 3
-					prepared = text
-					translated = TranslatorGoogleApiFree().translate_google_api_free(lang_from='auto', lang_to=self.frame.gestor_settings.choiceLangDestino_google, text=prepared, chunksize=3000, mostrar_progreso=False)
-				elif id == 3: # Google 4 API con Toquen
-					prepared = text
-					translated = TranslatorGoogleApiFreeAlternative().translate_google_api_free(lang_from='auto', lang_to=self.frame.gestor_settings.choiceLangDestino_google, text=prepared, chunksize=3000, mostrar_progreso=False)
-				elif id == 4: # DeepL Free
-					api_key, url = self.get_api()
-					if api_key is None:
-						logHandler.log.error(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
-
-						return text
-					prepared = text.encode('utf8', 'surrogatepass')
-					datos = self.translate_deepl(prepared, api_key, use_free_api=True,  source_lang="auto", target_lang=self.frame.gestor_settings.choiceLangDestino_deepl)
-					if isinstance(datos, bytes):
-						translated =  datos.decode('utf-8', 'surrogatepass')
-					elif isinstance(datos, str):
-						translated = datos
-					else:
-						translated = text
-				elif id == 5: # DeepL Pro
-					api_key, url = self.get_api()
-					if api_key is None:
-						logHandler.log.error(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
-						return text
-					prepared = text.encode('utf8', 'surrogatepass')
-					datos = self.translate_deepl(prepared, api_key, use_free_api=False,  source_lang="auto", target_lang=self.frame.gestor_settings.choiceLangDestino_deepl)
-					if isinstance(datos, bytes):
-						translated =  datos.decode('utf-8', 'surrogatepass')
-					elif isinstance(datos, str):
-						translated = datos
-					else:
-						translated = text
-				elif id == 6: # LibreTranslate
-					api_key, url = self.get_api()
-					if api_key is None:
-						logHandler.log.error(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
-						return text
-					if url is None:
-						logHandler.log.error(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
-						return text
-					prepared = text
-					translated = self.translate_libretranslate(prepared, api_key, source_lang="auto", target_lang=self.frame.gestor_settings.choiceLangDestino_libretranslate, api_url=url)
-				elif id == 7: # Microsoft
-					prepared = text
-					translated = self.translate_microsoft_api_free(self.frame.gestor_settings.choiceLangOrigen, self.frame.gestor_settings.choiceLangDestino_microsoft, prepared)
-				elif id == 8: # DeepL Gratis
-					translator = TranslatorDeepLFree()
-					translator.source_lang = 'auto'
-					translator.target_lang = self.frame.gestor_settings.choiceLangDestino_deepl
-					prepared = text
-					translated = translator.translate(prepared)
-				elif id == 9: # OpenAI
-					api_key, url = self.get_api()
-					if api_key is None:
-						logHandler.log.error(_("No tiene ninguna API configurada para el servicio que tiene seleccionado."))
-						return text
-					prepared = text
-					translated = self.translate_openai(api_key, prepared, target_language=self.frame.gestor_settings.choiceLangDestino_openai)
-		except Exception as e:
-			msg = \
-_("""Error en la traducción.
-
-Error:
-
-{}""").format(str(e))
-			logHandler.log.error(msg)
+			translated = self.translate_with_options(text, self.translation_options())
+		except Exception:
+			# Incoming speech must remain audible, but no secrets/text in logs.
+			logHandler.log.error("TranslateAdvanced: real-time translation failed; speaking original.")
 			return text
-
-		if not translated:
-			translated = text
-		else:
-			translated = postprocess_short_translation(text, translated, self.get_choice_lang_destino())
-			if self.frame.gestor_settings.chkCache:
-				self.frame.gestor_settings._translationCache[appName][text] = translated
-
+		if settings.chkCache and translated != text:
+			settings._translationCache.setdefault(appName, {})[text] = translated
 		return translated
 
 	def speak(self, speechSequence: SpeechSequence, priority: Spri = None):

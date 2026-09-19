@@ -9,11 +9,12 @@ import logHandler
 # Carga Python
 import json
 import re
+import ssl
 import urllib.error
 import urllib.request
 from typing import Any
 
-from ..utils.utils_short_translation import looks_like_english_message, postprocess_short_translation
+from ..utils.utils_short_translation import postprocess_short_translation
 
 # Carga traduccion
 addonHandler.initTranslation()
@@ -142,6 +143,9 @@ class TranslatorDeepL:
 		use_free_api: bool = True,
 		source_lang: str = "auto",
 		target_lang: str = "es",
+		*,
+		alternate_lang: str | None = None,
+		strict: bool = False,
 	) -> str:
 		"""
 		Tlumaczy tekst przez oficjalne API DeepL.
@@ -149,8 +153,7 @@ class TranslatorDeepL:
 		if not api_key:
 			raise ValueError(_("Se requiere una clave de API para DeepL."))
 
-		self.api_key = api_key
-		self.base_url = self._get_base_url(use_free_api)
+		base_url = self._get_base_url(use_free_api)
 		normalized_text = self._normalize_text(text)
 		payload: dict[str, Any] = {
 			"text": [normalized_text],
@@ -163,31 +166,41 @@ class TranslatorDeepL:
 			payload["context"] = context
 		if source_lang.lower() != "auto":
 			payload["source_lang"] = self._normalize_language_code(source_lang)
-		elif looks_like_english_message(normalized_text):
-			payload["source_lang"] = "EN"
 
-		url = "{}/translate".format(self.base_url)
-		data = json.dumps(payload).encode("utf-8")
 		req = urllib.request.Request(
-			url,
-			data=data,
-			headers=self._get_headers(self.api_key),
+			"{}/translate".format(base_url),
+			data=json.dumps(payload).encode("utf-8"),
+			headers=self._get_headers(api_key),
 			method="POST",
 		)
-
+		# Authentication is intentionally NOT copied by urllib to redirects.
+		req.add_unredirected_header("Authorization", req.headers.pop("Authorization"))
 		try:
-			with urllib.request.urlopen(req, timeout=20) as response:
+			with urllib.request.urlopen(req, timeout=20, context=ssl.create_default_context()) as response:
+				if getattr(response, "url", req.full_url) != req.full_url:
+					raise ValueError("DeepL redirected the authenticated request.")
 				response_json = self._read_json_response(response)
-				translated_text = response_json["translations"][0]["text"]
+				item = response_json["translations"][0]
+				translated_text = item["text"]
+				if not isinstance(translated_text, str) or not translated_text.strip():
+					raise ValueError("DeepL returned an empty translation.")
+				if alternate_lang:
+					detected = item.get("detected_source_language", "")
+					if not detected:
+						raise ValueError("DeepL did not return the detected language.")
+					base = lambda code: code.replace("_", "-").split("-")[0].upper()
+					if base(detected) == base(target_lang) and base(alternate_lang) != base(target_lang):
+						# Translate the ORIGINAL, never the already translated response.
+						return self.translate_deepl(normalized_text, api_key, use_free_api,
+							source_lang, alternate_lang, strict=strict)
 				translated_text = self._postprocess_translation(normalized_text, translated_text, target_lang)
 				return postprocess_short_translation(normalized_text, translated_text, target_lang)
-		except urllib.error.HTTPError as error:
-			logHandler.log.error(
-				_("Error en la traduccion DeepL: {0}").format(self._read_http_error(error)),
-			)
-			return normalized_text
 		except Exception as error:
-			logHandler.log.error(_("Error en la traduccion DeepL: {0}").format(str(error)))
+			status = getattr(error, "code", None)
+			message = _("DeepL: HTTP {}").format(status) if status else _("DeepL: translation failed.")
+			logHandler.log.error(message)
+			if strict:
+				raise RuntimeError(message) from None
 			return normalized_text
 
 	def get_usage(self, api_key: str, use_free_api: bool = False) -> str:

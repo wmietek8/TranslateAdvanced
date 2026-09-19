@@ -6,7 +6,21 @@
 
 This repository is a modified community fork maintained by **Axel (`wmietek8`)**. It is not an official upstream release. Axel authored the changes listed below, developed after upstream version `2024.09.19`. Existing notices and translator credits remain intact.
 
-## Scope of Axel's work since upstream 2024.09.19
+## Changes shipped in 2026.3
+
+- Restored bidirectional clipboard translation using the existing primary/alternate language settings. DeepL API provides its own detected source language; the original text is translated a second time only when direction switching requires it. No Google request occurs for DeepL or OpenAI translation.
+- Replaced the blocking clipboard command with a cancellable worker and main-thread clipboard/speech delivery. The command can be used while live translation is enabled. Clipboard generation checks protect newer copies; a successful result is copied before being spoken.
+- Removed the old long-text detour through Google. Clipboard, file and translation-window requests use the selected provider. The shared path limits input to 24,000 characters; unsupported automatic-direction providers report a clear limitation instead of silently contacting another provider.
+- Modernized the existing OpenAI provider (index 9), preserving existing API-key configuration. Added public Responses API, per-authentication model choices, live model discovery, strict output validation, refusal/incomplete/error handling, and model-aware cache keys. Explicit model IDs are never silently replaced after errors.
+- Added isolated managed ChatGPT OAuth via the official Codex app-server. Translation uses an **experimental undocumented ChatGPT/Codex HTTPS transport**, without starting agent turns or enabling model-controlled tools. This is not presented as a supported public third-party OAuth API. Codex is installed separately; no Codex binaries or account credentials are redistributed in the add-on.
+- Added a keyboard-accessible OpenAI dialog with separate API/ChatGPT preferences, login/cancel/status/logout and asynchronous model discovery. Account actions are explicit and independent of cancelling preference edits.
+- Removed legacy Google modules' process-wide disabling of TLS verification. Authenticated requests verify HTTPS, protect credentials from redirects and avoid exposing server error bodies or tokens.
+- Added Polish/English usage guides, safe opt-in live-service/native-Windows smoke scripts, and regression/security tests. Original attribution and GPL v2 are preserved. Model recommendations follow OpenAI's published positioning, not an invented translation benchmark.
+
+See `USER_GUIDE_PL.md`, `USER_GUIDE_EN.md` and `VALIDATION.md` for usage, known limits and exactly which tests were performed. Historical 2026.2 details below describe the previous release, not the new bidirectional behavior.
+
+## Changes shipped in 2026.2 (historical)
+
 
 ### NVDA 2026 and 64-bit compatibility
 

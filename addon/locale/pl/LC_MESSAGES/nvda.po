@@ -1981,3 +1981,831 @@ msgstr "Głośność {}%"
 #: globalPlugins/TranslateAdvanced/app/guis/guis_player.py:475
 msgid "Velocidad {}%"
 msgstr "Prędkość {}%"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:94
+msgid "&Authentication:"
+msgstr "&Uwierzytelnianie:"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:134
+msgid "&Cancel"
+msgstr "&Anuluj"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:115
+msgid "&Log in to ChatGPT"
+msgstr "Za&loguj się do ChatGPT"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:101
+msgid "&Model for the selected authentication method:"
+msgstr "&Model dla wybranej metody uwierzytelniania:"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:106
+msgid "&Refresh models"
+msgstr "&Odśwież modele"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:133
+msgid "&Save"
+msgstr "&Zapisz"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:127
+msgid "S&tatus:"
+msgstr "S&tan:"
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:101
+msgid "A secure connection to OpenAI could not be verified."
+msgstr "Nie udało się zweryfikować bezpieczeństwa połączenia z OpenAI."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:76
+msgid "A valid OpenAI API key is required."
+msgstr "Wymagany jest prawidłowy klucz API OpenAI."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:95
+msgid "API key"
+msgstr "Klucz API"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:99
+msgid ""
+"API keys are managed in the existing API manager in Options. ChatGPT sign-in"
+" does not require an API key. Nothing is fetched until you request it."
+msgstr ""
+"Kluczami API można zarządzać w dotychczasowym menedżerze API w Opcjach. "
+"Logowanie do ChatGPT nie wymaga klucza API. Żadne dane nie zostaną pobrane "
+"bez Twojego polecenia."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:241
+msgid ""
+"Add an OpenAI API key in Options and select it as the default before "
+"refreshing API models."
+msgstr ""
+"Przed odświeżeniem modeli API dodaj klucz API OpenAI w Opcjach i wybierz go "
+"jako domyślny."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:96
+msgid "Authentication"
+msgstr "Uwierzytelnianie"
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:226
+msgid ""
+"Automatic direction requires DeepL API, OpenAI or Google. Disable automatic "
+"language switching for this provider."
+msgstr ""
+"Automatyczny wybór kierunku tłumaczenia wymaga DeepL API, OpenAI lub Google."
+" Wyłącz automatyczne przełączanie języków dla tego dostawcy."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:116
+msgid "Cancel lo&gin"
+msgstr "Przerwij logowani&e"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:95
+msgid "ChatGPT OAuth (Codex CLI)"
+msgstr "Logowanie ChatGPT OAuth (Codex CLI)"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:100
+msgid ""
+"ChatGPT OAuth translation uses an experimental, undocumented ChatGPT "
+"endpoint. It may stop working after service changes. The API key option uses"
+" the official OpenAI API."
+msgstr ""
+"Tłumaczenie przez ChatGPT OAuth korzysta z eksperymentalnego, "
+"nieudokumentowanego interfejsu ChatGPT. Może przestać działać po zmianach w "
+"usłudze. Opcja z kluczem API korzysta z oficjalnego API OpenAI."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:113
+msgid ""
+"ChatGPT requires the official Codex CLI (codex.exe). Install it yourself "
+"using https://developers.openai.com/codex/cli, then enter its executable "
+"path above if it is not on PATH. No executable is downloaded by this dialog."
+msgstr ""
+"ChatGPT wymaga oficjalnego programu Codex CLI (codex.exe). Zainstaluj go "
+"samodzielnie, korzystając z https://developers.openai.com/codex/cli, a "
+"następnie wpisz powyżej ścieżkę do pliku wykonywalnego, jeśli nie znajduje "
+"się w zmiennej PATH. To okno nie pobiera żadnych plików wykonywalnych."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:121
+msgid "Chec&k account"
+msgstr "Sprawdź &konto"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:275
+msgid "Checking ChatGPT account..."
+msgstr "Sprawdzanie konta ChatGPT..."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:239
+msgid "Choose a valid OpenAI model identifier."
+msgstr "Wybierz prawidłowy identyfikator modelu OpenAI."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:237
+msgid "Choose a valid translation language code."
+msgstr "Wybierz prawidłowy kod języka tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/__init__.py:585
+#: globalPlugins/TranslateAdvanced/__init__.py:598
+#: globalPlugins/TranslateAdvanced/__init__.py:663
+msgid "Clipboard changed. Translation was not copied."
+msgstr "Zawartość schowka uległa zmianie. Tłumaczenie nie zostało skopiowane."
+
+#: globalPlugins/TranslateAdvanced/__init__.py:562
+#: globalPlugins/TranslateAdvanced/__init__.py:594
+msgid "Clipboard unavailable. Please try again."
+msgstr "Schowek jest niedostępny. Spróbuj ponownie."
+
+#: globalPlugins/TranslateAdvanced/__init__.py:669
+msgid "Clipboard unavailable. Translation was not copied."
+msgstr "Schowek jest niedostępny. Tłumaczenie nie zostało skopiowane."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:108
+msgid "Codex &executable path (optional):"
+msgstr "Ścieżka do &pliku wykonywalnego Codex (opcjonalnie):"
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:169
+msgid "Codex access-only session expired. Sign in again in account settings."
+msgstr ""
+"Sesja Codex bez możliwości odnowienia dostępu wygasła. Zaloguj się ponownie "
+"w ustawieniach konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:316
+msgid "Codex authorization failed. Sign in again or check model access."
+msgstr ""
+"Autoryzacja Codex nie powiodła się. Zaloguj się ponownie lub sprawdź dostęp "
+"do modelu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:247
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:287
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:511
+msgid "Codex client is closed."
+msgstr "Klient Codex został zamknięty."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:164
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:222
+msgid "Codex client is closed. Reconnect to try again."
+msgstr ""
+"Klient Codex został zamknięty. Połącz się ponownie, aby spróbować jeszcze "
+"raz."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:279
+msgid "Codex connection closed unexpectedly."
+msgstr "Połączenie z Codex zostało nieoczekiwanie zamknięte."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:229
+msgid ""
+"Codex could not complete this translation. No partial result was returned."
+msgstr ""
+"Codex nie mógł ukończyć tego tłumaczenia. Nie zwrócono częściowego wyniku."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:130
+msgid "Codex credentials are invalid. Sign in again in account settings."
+msgstr ""
+"Dane uwierzytelniające Codex są nieprawidłowe. Zaloguj się ponownie w "
+"ustawieniach konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:135
+msgid "Codex credentials are unavailable. Sign in again in account settings."
+msgstr ""
+"Dane uwierzytelniające Codex są niedostępne. Zaloguj się ponownie w "
+"ustawieniach konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:191
+msgid ""
+"Codex did not complete the translation. No partial result was returned."
+msgstr "Codex nie ukończył tłumaczenia. Nie zwrócono częściowego wyniku."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:566
+msgid "Codex did not confirm sign-out. Reconnect and check account status."
+msgstr ""
+"Codex nie potwierdził wylogowania. Połącz się ponownie i sprawdź stan konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:255
+msgid "Codex disconnected before completing the translation."
+msgstr "Połączenie z Codex zostało przerwane przed ukończeniem tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:223
+msgid "Codex ended the stream before a completed translation."
+msgstr "Codex zakończył przesyłanie odpowiedzi przed ukończeniem tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:110
+msgid "Codex executable path (optional)"
+msgstr "Ścieżka do pliku wykonywalnego Codex (opcjonalnie)"
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:439
+msgid "Codex model catalog exceeded the safe pagination limit."
+msgstr "Katalog modeli Codex przekroczył bezpieczny limit liczby stron."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:417
+msgid "Codex model listing timed out; no partial catalog was returned."
+msgstr ""
+"Upłynął limit czasu pobierania listy modeli Codex. Nie zwrócono niepełnego "
+"katalogu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:161
+msgid "Codex operation timed out while waiting for another request."
+msgstr ""
+"Upłynął limit czasu operacji Codex podczas oczekiwania na zakończenie innego"
+" żądania."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:211
+msgid "Codex refused the translation or returned non-text content."
+msgstr "Codex odmówił tłumaczenia lub zwrócił treść inną niż tekst."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:237
+msgid "Codex refused the translation."
+msgstr "Codex odmówił tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:298
+msgid ""
+"Codex request failed. Check sign-in status or reconnect; private server "
+"details were withheld."
+msgstr ""
+"Żądanie do Codex nie powiodło się. Sprawdź, czy jesteś zalogowany, lub "
+"połącz się ponownie. Prywatne szczegóły odpowiedzi serwera zostały ukryte."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:296
+msgid "Codex request timed out. Reconnect and try again."
+msgstr ""
+"Upłynął limit czasu żądania do Codex. Połącz się ponownie i spróbuj jeszcze "
+"raz."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:234
+msgid "Codex returned a forbidden output item. Nothing was executed."
+msgstr "Codex zwrócił niedozwolony element odpowiedzi. Niczego nie wykonano."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:231
+msgid "Codex returned a forbidden tool event. Nothing was executed."
+msgstr "Codex zwrócił niedozwolone zdarzenie narzędzia. Niczego nie wykonano."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:202
+msgid ""
+"Codex returned a forbidden tool or non-text output. Nothing was executed."
+msgstr ""
+"Codex zwrócił niedozwolone wywołanie narzędzia lub odpowiedź inną niż tekst."
+" Niczego nie wykonano."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:217
+msgid "Codex returned an empty or oversized translation."
+msgstr "Codex zwrócił puste lub zbyt długie tłumaczenie."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:194
+msgid "Codex returned an invalid completed response."
+msgstr "Codex zwrócił nieprawidłową odpowiedź końcową."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:421
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:424
+msgid "Codex returned an invalid model catalog."
+msgstr "Codex zwrócił nieprawidłowy katalog modeli."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:508
+msgid "Codex returned an invalid official sign-in response."
+msgstr "Codex zwrócił nieprawidłową odpowiedź oficjalnego procesu logowania."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:198
+msgid "Codex returned an invalid output item."
+msgstr "Codex zwrócił nieprawidłowy element odpowiedzi."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:226
+msgid "Codex returned an invalid streaming event."
+msgstr "Codex zwrócił nieprawidłowe zdarzenie w strumieniu odpowiedzi."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:207
+msgid "Codex returned an invalid text message."
+msgstr "Codex zwrócił nieprawidłową wiadomość tekstową."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:258
+msgid "Codex returned an oversized response stream."
+msgstr "Codex przekroczył dopuszczalny rozmiar strumienia odpowiedzi."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:204
+msgid "Codex returned an unfinished or invalid message."
+msgstr "Codex zwrócił nieukończoną lub nieprawidłową wiadomość."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:398
+msgid "Codex returned an unsupported account type."
+msgstr "Codex zwrócił nieobsługiwany typ konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:321
+msgid "Codex returned an unsupported response format."
+msgstr "Codex zwrócił odpowiedź w nieobsługiwanym formacie."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:427
+msgid "Codex returned invalid model capabilities."
+msgstr "Codex zwrócił nieprawidłowe informacje o możliwościach modelu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:437
+msgid ""
+"Codex returned invalid model pagination; no partial catalog was returned."
+msgstr ""
+"Codex zwrócił nieprawidłowy podział listy modeli na strony. Nie zwrócono "
+"niepełnego katalogu."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:474
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:476
+msgid "Codex session could not be refreshed. Sign in again."
+msgstr "Nie udało się odnowić sesji Codex. Zaloguj się ponownie."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:127
+msgid "Codex sign-in is missing. Sign in again in account settings."
+msgstr ""
+"Brak aktywnego logowania do Codex. Zaloguj się ponownie w ustawieniach "
+"konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:326
+msgid "Codex translation failed or timed out. No partial result was returned."
+msgstr ""
+"Tłumaczenie przez Codex nie powiodło się lub upłynął limit czasu. Nie "
+"zwrócono częściowego wyniku."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:319
+msgid ""
+"Codex translation request failed. The internal service may be unavailable or"
+" incompatible."
+msgstr ""
+"Żądanie tłumaczenia przez Codex nie powiodło się. Wewnętrzna usługa może być"
+" niedostępna lub niezgodna z dodatkiem."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:184
+msgid "Codex translation timed out. No partial result was returned."
+msgstr ""
+"Upłynął limit czasu tłumaczenia przez Codex. Nie zwrócono częściowego "
+"wyniku."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:181
+msgid "Codex translation was canceled."
+msgstr "Tłumaczenie przez Codex zostało anulowane."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:318
+msgid ""
+"Codex usage limit reached. Try again later or choose another available "
+"model."
+msgstr ""
+"Osiągnięto limit korzystania z Codex. Spróbuj ponownie później lub wybierz "
+"inny dostępny model."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_options.py:196
+msgid "Configure &OpenAI (API / ChatGPT OAuth)..."
+msgstr "Konfiguruj &OpenAI (API / logowanie ChatGPT OAuth)..."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_options.py:94
+msgid ""
+"Configure OpenAI API or ChatGPT OAuth and choose a model. Saving OpenAI "
+"preferences does not change the selected translation provider."
+msgstr ""
+"Skonfiguruj API OpenAI lub logowanie ChatGPT OAuth i wybierz model. "
+"Zapisanie ustawień OpenAI nie zmienia wybranego dostawcy tłumaczeń."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:276
+msgid ""
+"Could not check the account. Install the official native Codex executable or"
+" correct its path. Installation: https://developers.openai.com/codex/cli"
+msgstr ""
+"Nie udało się sprawdzić konta. Zainstaluj oficjalny program Codex w wersji "
+"natywnej lub popraw ścieżkę do jego pliku wykonywalnego. Instalacja: "
+"https://developers.openai.com/codex/cli"
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:524
+msgid "Could not confirm cancellation of Codex sign-in."
+msgstr "Nie udało się potwierdzić anulowania logowania do Codex."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:351
+msgid ""
+"Could not confirm sign-out. Check the Codex executable path and use Check "
+"account before retrying."
+msgstr ""
+"Nie udało się potwierdzić wylogowania. Sprawdź ścieżkę do pliku "
+"wykonywalnego Codex i przed ponowną próbą użyj przycisku Sprawdź konto."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:101
+msgid "Could not connect to OpenAI. Check the network connection."
+msgstr "Nie udało się połączyć z OpenAI. Sprawdź połączenie sieciowe."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:259
+msgid ""
+"Could not refresh API models. Check the selected API key, network connection"
+" and account access."
+msgstr ""
+"Nie udało się odświeżyć modeli API. Sprawdź wybrany klucz API, połączenie "
+"sieciowe i uprawnienia konta."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:261
+msgid ""
+"Could not refresh ChatGPT models. Check the Codex executable path, log in "
+"and try again. Installation: https://developers.openai.com/codex/cli"
+msgstr ""
+"Nie udało się odświeżyć modeli ChatGPT. Sprawdź ścieżkę do pliku "
+"wykonywalnego Codex, zaloguj się i spróbuj ponownie. Instalacja: "
+"https://developers.openai.com/codex/cli"
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:267
+msgid ""
+"Could not start the isolated Codex app-server. Check the official CLI "
+"installation."
+msgstr ""
+"Nie udało się uruchomić odizolowanego serwera aplikacji Codex. Sprawdź "
+"instalację oficjalnego programu Codex CLI."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_settings.py:315
+msgid "El valor no es un tipo esperado."
+msgstr "Wartość nie jest oczekiwanego typu."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:111
+msgid ""
+"Enter the full path to an installed codex.exe, or leave blank to find it on "
+"PATH. Do not enter an API key or token."
+msgstr ""
+"Wpisz pełną ścieżkę do zainstalowanego pliku codex.exe lub pozostaw pole "
+"puste, aby wyszukać go w zmiennej PATH. Nie wpisuj klucza API ani tokena."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:71
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:81
+msgid "Invalid Codex model identifier. Select an exact listed model."
+msgstr ""
+"Nieprawidłowy identyfikator modelu Codex. Wybierz dokładny identyfikator "
+"modelu z listy."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:119
+msgid "Invalid Codex timeout."
+msgstr "Nieprawidłowy limit czasu Codex."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:289
+msgid "Invalid Codex translation timeout."
+msgstr "Nieprawidłowy limit czasu tłumaczenia przez Codex."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:69
+msgid "Invalid alternate language identifier."
+msgstr "Nieprawidłowy identyfikator języka alternatywnego."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:613
+msgid "Invalid dedicated Codex home."
+msgstr "Nieprawidłowy dedykowany katalog danych Codex."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:117
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:121
+msgid "Invalid managed Codex credential storage."
+msgstr ""
+"Nieprawidłowy magazyn danych uwierzytelniających zarządzanej sesji Codex."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:67
+msgid "Invalid translation language identifier."
+msgstr "Nieprawidłowy identyfikator języka tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:222
+msgid "Language detection failed. Clipboard was not changed."
+msgstr "Nie udało się wykryć języka. Zawartość schowka nie została zmieniona."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:122
+msgid "Log &out"
+msgstr "W&yloguj się"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:103
+msgid "Model for the selected authentication method"
+msgstr "Model dla wybranej metody uwierzytelniania"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:257
+msgid ""
+"Models refreshed. Select a model or type its exact ID. Availability depends "
+"on your account."
+msgstr ""
+"Modele zostały odświeżone. Wybierz model lub wpisz jego dokładny "
+"identyfikator. Dostępność zależy od Twojego konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:105
+msgid ""
+"Native Codex executable not found. Install the official Codex CLI or select "
+"codex.exe (not a command line)."
+msgstr ""
+"Nie znaleziono natywnego pliku wykonywalnego Codex. Zainstaluj oficjalny "
+"program Codex CLI lub wskaż plik codex.exe, a nie całe polecenie."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:257
+msgid "No models were returned. Keep 'auto' or enter an available model ID."
+msgstr ""
+"Nie otrzymano żadnych modeli. Pozostaw wartość 'auto' lub wpisz "
+"identyfikator dostępnego modelu."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:248
+msgid "No recommended OpenAI model is available. Select a model explicitly."
+msgstr ""
+"Żaden z zalecanych modeli OpenAI nie jest dostępny. Wybierz konkretny model."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:88
+msgid "No suitable Codex text model is available for this account."
+msgstr ""
+"Dla tego konta nie jest dostępny żaden odpowiedni model tekstowy Codex."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:268
+msgid ""
+"Not signed in to ChatGPT for this NVDA profile. Use Log in to continue."
+msgstr ""
+"W tym profilu NVDA nie jesteś zalogowany do ChatGPT. Aby kontynuować, użyj "
+"przycisku Zaloguj się do ChatGPT."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:77
+#: globalPlugins/TranslateAdvanced/app/managers/managers_settings.py:95
+#: globalPlugins/TranslateAdvanced/app/managers/managers_settings.py:107
+#: globalPlugins/TranslateAdvanced/app/managers/managers_settings.py:113
+msgid "OpenAI (API / ChatGPT OAuth)"
+msgstr "OpenAI (API / logowanie ChatGPT OAuth)"
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:34
+msgid "OpenAI authentication failed. Check the API key."
+msgstr "Uwierzytelnianie OpenAI nie powiodło się. Sprawdź klucz API."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:148
+msgid "OpenAI could not complete the translation. Try a shorter text."
+msgstr ""
+"OpenAI nie mogło ukończyć tłumaczenia. Spróbuj przetłumaczyć krótszy tekst."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:170
+msgid "OpenAI declined to translate this text."
+msgstr "OpenAI odmówiło przetłumaczenia tego tekstu."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:150
+msgid "OpenAI did not complete the translation. Try again later."
+msgstr "OpenAI nie ukończyło tłumaczenia. Spróbuj ponownie później."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:42
+msgid "OpenAI is temporarily unavailable. Try again later."
+msgstr "Usługa OpenAI jest tymczasowo niedostępna. Spróbuj ponownie później."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:36
+msgid "OpenAI permission denied. Check account and model access."
+msgstr ""
+"OpenAI odmówiło dostępu. Sprawdź uprawnienia konta i dostęp do modelu."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:40
+msgid "OpenAI rate limit or quota exceeded. Check billing or try later."
+msgstr ""
+"Przekroczono limit liczby żądań lub limit wykorzystania OpenAI. Sprawdź "
+"rozliczenia lub spróbuj później."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:32
+msgid "OpenAI redirect refused to protect account credentials."
+msgstr ""
+"Odrzucono przekierowanie OpenAI, aby chronić dane uwierzytelniające konta."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:43
+msgid ""
+"OpenAI rejected the request. Check the selected model and input length."
+msgstr ""
+"OpenAI odrzuciło żądanie. Sprawdź wybrany model i długość tekstu "
+"wejściowego."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:101
+msgid "OpenAI request timed out. Try again later."
+msgstr "Upłynął limit czasu żądania do OpenAI. Spróbuj ponownie później."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:88
+msgid "OpenAI returned a response that is too large."
+msgstr "OpenAI zwróciło zbyt dużą odpowiedź."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:301
+msgid "OpenAI returned an inconsistent source language."
+msgstr "OpenAI zwróciło język źródłowy niezgodny z żądaniem."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:306
+msgid "OpenAI returned an inconsistent target language."
+msgstr "OpenAI zwróciło język docelowy niezgodny z żądaniem."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:71
+msgid "OpenAI returned an invalid JSON response."
+msgstr "OpenAI zwróciło nieprawidłową odpowiedź JSON."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:128
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:132
+msgid "OpenAI returned an invalid model catalog."
+msgstr "OpenAI zwróciło nieprawidłowy katalog modeli."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:103
+msgid "OpenAI returned an invalid response."
+msgstr "OpenAI zwróciło nieprawidłową odpowiedź."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:146
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:153
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:157
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:162
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:165
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:168
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:172
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:179
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:181
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:185
+msgid "OpenAI returned an invalid translation response."
+msgstr "OpenAI zwróciło nieprawidłową odpowiedź na żądanie tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:130
+msgid "OpenAI status"
+msgstr "Stan OpenAI"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:327
+msgid ""
+"Opening sign-in in your browser. Complete sign-in there; Cancel login stops "
+"waiting."
+msgstr ""
+"Otwieranie strony logowania w przeglądarce. Dokończ tam logowanie. Przycisk "
+"Przerwij logowanie zatrzymuje oczekiwanie."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:109
+msgid "Personal Codex credentials cannot be used by this transport."
+msgstr ""
+"Ten sposób połączenia nie pozwala używać danych uwierzytelniających z "
+"osobistej konfiguracji Codex."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:128
+msgid "Ready. No account or model request has been made."
+msgstr "Gotowe. Nie wysłano żadnego żądania dotyczącego konta ani modeli."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:104
+msgid ""
+"Refresh to list available models, or type an exact model ID. 'auto' selects "
+"an available model automatically. API and ChatGPT model choices are saved "
+"separately."
+msgstr ""
+"Odśwież listę dostępnych modeli lub wpisz dokładny identyfikator modelu. "
+"Wartość 'auto' automatycznie wybiera dostępny model. Wybór modelu dla API i "
+"ChatGPT jest zapisywany oddzielnie."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:262
+msgid "Refreshing models..."
+msgstr "Odświeżanie modeli..."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:336
+msgid ""
+"Requesting sign-in cancellation. You can close this dialog while waiting."
+msgstr ""
+"Wysyłanie żądania anulowania logowania. Podczas oczekiwania możesz zamknąć "
+"to okno."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:287
+msgid "Resolve an exact available Codex model before translation."
+msgstr ""
+"Przed tłumaczeniem wybierz dokładny identyfikator dostępnego modelu Codex."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:126
+msgid ""
+"Save applies these preferences immediately, independently of Options. Cancel"
+" discards preference edits. Log in, Cancel login and Log out are separate "
+"account actions and are not undone by Cancel. Live translation is paused "
+"while this dialog is open."
+msgstr ""
+"Przycisk Zapisz natychmiast stosuje te ustawienia, niezależnie od okna "
+"Opcje. Przycisk Anuluj odrzuca zmiany ustawień. Logowanie, przerwanie "
+"logowania i wylogowanie są oddzielnymi działaniami na koncie i przycisk "
+"Anuluj ich nie cofa. Tłumaczenie w czasie rzeczywistym jest wstrzymane, gdy "
+"to okno jest otwarte."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:115
+msgid "Sign in through the add-on's dedicated Codex account settings."
+msgstr ""
+"Zaloguj się w ustawieniach konta Codex przeznaczonego dla tego dodatku."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:410
+msgid "Sign in to ChatGPT before loading Codex models."
+msgstr "Zaloguj się do ChatGPT przed pobraniem listy modeli Codex."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:452
+msgid "Sign in to ChatGPT before translating."
+msgstr "Zaloguj się do ChatGPT przed rozpoczęciem tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:124
+msgid "Sign in with ChatGPT through the add-on's Codex account settings."
+msgstr "Zaloguj się przez ChatGPT w ustawieniach konta Codex tego dodatku."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:322
+msgid ""
+"Sign-in cancellation requested. If you completed sign-in in the browser, use"
+" Check account or Log out."
+msgstr ""
+"Wysłano żądanie anulowania logowania. Jeśli logowanie w przeglądarce zostało"
+" ukończone, użyj przycisku Sprawdź konto lub Wyloguj się."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:328
+msgid ""
+"Sign-in did not complete. Check the network and native Codex executable "
+"path, then retry or check the account. Installation: "
+"https://developers.openai.com/codex/cli"
+msgstr ""
+"Logowanie nie zostało ukończone. Sprawdź połączenie sieciowe i ścieżkę do "
+"natywnego pliku wykonywalnego Codex, a następnie spróbuj ponownie lub "
+"sprawdź konto. Instalacja: https://developers.openai.com/codex/cli"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:266
+msgid "Signed in to ChatGPT for this NVDA profile."
+msgstr "Zalogowano do ChatGPT w tym profilu NVDA."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:349
+msgid "Signed out of ChatGPT for this NVDA profile."
+msgstr "Wylogowano z ChatGPT w tym profilu NVDA."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:350
+msgid "Signing out of ChatGPT..."
+msgstr "Wylogowywanie z ChatGPT..."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_guitrans.py:283
+msgid "Source and target languages must be different."
+msgstr "Język źródłowy i docelowy muszą być różne."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:110
+msgid "The Codex integration is unavailable. Check the add-on installation."
+msgstr "Integracja z Codex jest niedostępna. Sprawdź instalację dodatku."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:118
+msgid "The Codex request failed. Check the ChatGPT connection."
+msgstr "Żądanie do Codex nie powiodło się. Sprawdź połączenie z ChatGPT."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:85
+msgid ""
+"The selected Codex model is not available. Refresh the model list and choose"
+" an exact identifier."
+msgstr ""
+"Wybrany model Codex jest niedostępny. Odśwież listę modeli i wybierz "
+"dokładny identyfikator."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:38
+msgid "The selected OpenAI model is unavailable for this account."
+msgstr "Wybrany model OpenAI jest niedostępny dla tego konta."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:241
+msgid ""
+"The selected executable is not a recognized official Codex CLI. Check the "
+"installation."
+msgstr ""
+"Wybrany plik wykonywalny nie został rozpoznany jako oficjalny program Codex "
+"CLI. Sprawdź instalację."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:202
+msgid "There is no text to translate."
+msgstr "Brak tekstu do przetłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:284
+msgid "This Codex operation is disabled for safety."
+msgstr "Ta operacja Codex jest wyłączona ze względów bezpieczeństwa."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:204
+msgid "Translate up to 24000 characters at a time."
+msgstr "Jednorazowo można przetłumaczyć do 24000 znaków."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:235
+msgid "Translation failed. Clipboard was not changed."
+msgstr ""
+"Tłumaczenie nie powiodło się. Zawartość schowka nie została zmieniona."
+
+#: globalPlugins/TranslateAdvanced/__init__.py:653
+#, python-brace-format
+msgid "Translation failed. Clipboard was not changed. {0}"
+msgstr ""
+"Tłumaczenie nie powiodło się. Zawartość schowka nie została zmieniona. {0}"
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:233
+msgid "Translation input contains invalid Unicode."
+msgstr "Tekst do tłumaczenia zawiera nieprawidłowe znaki Unicode."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:64
+msgid ""
+"Translation input is too large or has invalid Unicode. Split it into smaller"
+" parts."
+msgstr ""
+"Tekst do tłumaczenia jest zbyt długi lub zawiera nieprawidłowe znaki "
+"Unicode. Podziel go na mniejsze części."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:227
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:58
+msgid "Translation input must be text."
+msgstr "Dane do tłumaczenia muszą być tekstem."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_guitrans.py:268
+msgid "Translation is limited to 24000 characters."
+msgstr "Tłumaczenie jest ograniczone do 24000 znaków."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:251
+msgid "Translation returned no text."
+msgstr "Nie otrzymano tekstu tłumaczenia."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:520
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:537
+msgid "Unknown Codex sign-in request."
+msgstr "Nieznane żądanie logowania do Codex."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:247
+msgid "Unknown translation provider."
+msgstr "Nieznany dostawca tłumaczeń."
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_openai_4o_api.py:195
+msgid "Unsupported OpenAI authentication mode."
+msgstr "Nieobsługiwany tryb uwierzytelniania OpenAI."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex.py:193
+msgid ""
+"Use a fresh, dedicated TranslateAdvanced Codex home without custom config or"
+" shared credentials; never use your personal .codex directory."
+msgstr ""
+"Użyj nowego, oddzielnego katalogu danych Codex przeznaczonego dla "
+"TranslateAdvanced, bez własnej konfiguracji ani współdzielonych danych "
+"uwierzytelniających. Nigdy nie używaj osobistego katalogu .codex."
+
+#: globalPlugins/TranslateAdvanced/app/utils/utils_codex_response.py:105
+msgid "Use the add-on's dedicated Codex home."
+msgstr "Użyj katalogu danych Codex przeznaczonego dla tego dodatku."
+
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_deepl_original.py
+msgid "DeepL: HTTP {}"
+msgstr "DeepL: błąd HTTP {}"
+
+#: globalPlugins/TranslateAdvanced/app/src_translations/src_deepl_original.py
+msgid "DeepL: translation failed."
+msgstr "DeepL: nie udało się przetłumaczyć tekstu."
