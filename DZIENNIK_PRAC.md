@@ -46,3 +46,11 @@
 - Osobna kontrola 177 plików źródłowych przeznaczonych do repozytorium nie znalazła kontrolowanych sekretów.
 - SHA-256 paczki: `f891306649cf17f27213eb38f81ded37cdc5c8b08705dbbffd7d32339c2a7ce4`.
 - Repozytorium zdalne `wmietek8/TranslateAdvanced`, gałąź `master`, było zgodne z lokalną podstawą zmian. Przygotowano publikację kodu oraz wydania 2026.4 z paczką i sumą SHA-256.
+
+## Publikacja i sprawdzenie pobrania
+
+- Commit kodu `b885ccb8f5a1bd6e23b7de87797418000abbec5d` wypchnięto na `origin/master`.
+- GitHub odrzucił skrócony identyfikator commita jako cel wydania; ponowiono utworzenie z pełnym identyfikatorem, bez zmiany kodu lub paczki.
+- Opublikowano zwykłe wydanie [2026.4](https://github.com/wmietek8/TranslateAdvanced/releases/tag/2026.4) z plikami `TranslateAdvanced-2026.4.nvda-addon` i `TranslateAdvanced-2026.4.sha256`.
+- Paczkę pobrano ponownie z GitHuba do osobnego katalogu. Jej SHA-256 jest identyczne z wcześniej sprawdzonym artefaktem i opublikowanym plikiem sumy. Tag wydania wskazuje dokładnie commit kodu podany powyżej.
+- Działający NVDA nie był restartowany ani podmieniany. Użytkownik instaluje opublikowaną paczkę jako aktualizację i następnie uruchamia NVDA ponownie.
