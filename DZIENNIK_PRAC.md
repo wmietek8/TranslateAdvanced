@@ -82,3 +82,11 @@
 - Zaktualizowano lokalną instalację: 13 nowych lub zmienionych plików, wszystkie 106 plików paczki identyczne z wydaniem. Kopia 2026.4: `%LOCALAPPDATA%\TranslateAdvanced\backups\20260919-194034-532098\TranslateAdvanced-2026.4`. Konfiguracja, klucze i logowanie pozostały identyczne; restart NVDA pozostawiono użytkownikowi.
 - Commit `2f7442cc8ca46b9e9e35b224ce1a566a1b8fe0cd` wypchnięto na `origin/master`. Opublikowano [wydanie 2026.5](https://github.com/wmietek8/TranslateAdvanced/releases/tag/2026.5) z paczką i sumą SHA-256; tag wskazuje ten sam commit.
 - Paczkę i sumę pobrano niezależnie z GitHuba do osobnego katalogu. Skrót jest identyczny ze sprawdzonym i lokalnie zainstalowanym artefaktem. Publikacja nie wymaga ręcznej instalacji przez użytkownika na tym komputerze: wystarczy jego restart NVDA.
+
+## Porównanie modeli po zgłoszeniu około 4 sekund oczekiwania
+
+- Użytkownik zapytał o zmianę modelu, ponieważ poprawa 2026.5 nadal nie zapewnia oczekiwanej szybkości. Sprawdzono oficjalne opisy Sola, Terry i Luny oraz zalecenia dotyczące opóźnień. Terra odpowiada klasie mini: https://developers.openai.com/api/docs/models/gpt-5.6-terra.
+- W niezmienionym kodzie 2026.5 wykonano dziewięć prób Terry i następnie dziewięć kontrolnych prób Sola, tym samym skryptem i na tych samych trzech syntetycznych tekstach. Każda pierwsza wypowiedź korzystała z jednego HTTPS, a jej powtórka z pamięci tłumaczeń.
+- Terra: mediana 1,527 s, zakres 1,387–2,376 s. Sol w nowej serii kontrolnej: mediana 2,418 s, zakres 1,651–3,474 s. Terra korzystała z parametrów dostępnych po zwykłym wyborze modelu w wydaniu 2026.5, bez eksperymentalnego modyfikowania żądań.
+- Wynik uzasadnia próbę `gpt-5.6-terra` w ustawieniach, ale nie gwarantuje tego czasu dla innych tekstów i obciążenia usługi. Serie wykonano kolejno, nie jest to duży losowy test porównawczy. Wcześniejsza Luna nie wykazywała wyraźnej przewagi.
+- Obie próby potwierdziły zachowanie oryginalnego logowania, komend mowy i katalogu modeli. Nie zmieniono modelu użytkownika, kodu ani instalacji; nie jest potrzebne nowe wydanie. Wybór modelu w oknie OpenAI i przycisk Zapisz działają bez restartu NVDA.
