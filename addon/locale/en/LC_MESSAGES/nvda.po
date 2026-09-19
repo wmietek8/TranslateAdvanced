@@ -1971,3 +1971,78 @@ msgstr "Volume {}%"
 #: globalPlugins/TranslateAdvanced/app/guis/guis_player.py:475
 msgid "Velocidad {}%"
 msgstr "Speed {}%"
+
+
+# Poprawki konta ChatGPT i dostępności w wersji 2026.4.
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:135
+msgid "&Używaj tego silnika"
+msgstr "&Use this translation engine"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:128
+msgid ""
+"Logowanie i wylogowanie działają od razu. Zapisz zachowuje ustawienia; "
+"Używaj tego silnika dodatkowo wybiera OpenAI do tłumaczenia. Anuluj nie cofa"
+" logowania."
+msgstr ""
+"Sign-in and sign-out take effect immediately. Save keeps these preferences; "
+"Use this translation engine also selects OpenAI for translation. Cancel does"
+" not undo sign-in."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:284
+msgid "Modele odświeżone. Wybierz model z listy."
+msgstr "Models refreshed. Choose a model from the list."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:105
+msgid "Model"
+msgstr "Model"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:115
+msgid ""
+"Logowanie obsługuje oficjalny program Codex. Zostaw ścieżkę pustą, jeśli "
+"jest zainstalowany. Instrukcja: https://developers.openai.com/codex/cli. "
+"Tłumaczenie przez konto ChatGPT jest eksperymentalne."
+msgstr ""
+"Sign-in uses the official Codex program. Leave the path empty if it is "
+"installed. Instructions: https://developers.openai.com/codex/cli. "
+"Translation using a ChatGPT account is experimental."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:106
+msgid ""
+"Wybierz model z listy. Opcja auto dobiera dostępny model. Wybory dla konta "
+"ChatGPT i klucza API są zapisywane osobno."
+msgstr ""
+"Choose a model from the list. The auto option selects an available model. "
+"ChatGPT and API model preferences are saved separately."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:103
+msgid "&Model:"
+msgstr "&Model:"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:130
+msgid "Gotowe."
+msgstr "Ready."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:102
+msgid ""
+"Konto ChatGPT nie wymaga klucza API. Po zalogowaniu modele pobierają się "
+"automatycznie i są zapamiętywane do wylogowania."
+msgstr ""
+"A ChatGPT account does not require an API key. Models load automatically "
+"after sign-in and are remembered until sign-out."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:322
+msgid ""
+"Konto ChatGPT jest zalogowane. Nie udało się pobrać modeli; możesz ponowić "
+"odświeżanie."
+msgstr ""
+"Signed in to ChatGPT. Models could not be loaded; try refreshing them again."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:284
+msgid "Usługa nie zwróciła modeli. Spróbuj odświeżyć listę później."
+msgstr "The service returned no models. Try refreshing the list later."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:330
+msgid ""
+"Tłumaczenie w locie nie powiodło się. Sprawdź wybrany silnik i jego "
+"ustawienia."
+msgstr "Live translation failed. Check the selected engine and its settings."

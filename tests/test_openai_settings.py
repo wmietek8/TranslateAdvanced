@@ -1,5 +1,6 @@
 """Exercise real settings/dialog code; replace only NVDA/wx and I/O boundaries."""
 import importlib.util
+import json
 import queue
 import threading
 import time
@@ -255,20 +256,20 @@ def test_dialog_switches_models_without_saving_and_cancel_discards(gui_app):
     settings.openai_model_oauth = "my-chatgpt-model"
     dialog = cls(None, gui_app.frame)
     assert not settings._enableTranslation, "Reading settings must not trigger live translation"
-    assert dialog.model_combo.GetValue() == "my-api-model"
-    assert dialog.model_combo.style & gui_app.wx.CB_DROPDOWN
+    assert dialog.model_combo.GetStringSelection() == "my-api-model"
+    assert isinstance(dialog.model_combo, gui_app.wx.Choice)
     assert "auto" in dialog.model_combo.choices
     assert dialog.status.name
     assert not dialog.login_button.enabled
-    dialog.model_combo.SetValue("edited-api-model")
+    _choose_model(dialog, "edited-api-model")
     dialog.auth_choice.SetSelection(1)
     dialog.on_auth_choice(None)
-    assert dialog.model_combo.GetValue() == "my-chatgpt-model"
+    assert dialog.model_combo.GetStringSelection() == "my-chatgpt-model"
     assert dialog.login_button.enabled
-    dialog.model_combo.SetValue("edited-oauth-model")
+    _choose_model(dialog, "edited-oauth-model")
     dialog.auth_choice.SetSelection(0)
     dialog.on_auth_choice(None)
-    assert dialog.model_combo.GetValue() == "edited-api-model"
+    assert dialog.model_combo.GetStringSelection() == "edited-api-model"
     assert settings.openai_model_api == "my-api-model"
     dialog.codex_path.SetValue("C:/Apps/codex.exe")
     dialog.on_cancel(None)
@@ -284,10 +285,10 @@ def test_save_applies_both_models_and_path_without_changing_default_provider(gui
     settings = gui_app.frame.gestor_settings
     settings.choiceOnline = 5
     dialog = cls(None, gui_app.frame)
-    dialog.model_combo.SetValue("custom-api")
+    _choose_model(dialog, "custom-api")
     dialog.auth_choice.SetSelection(1)
     dialog.on_auth_choice(None)
-    dialog.model_combo.SetValue("custom-oauth")
+    _choose_model(dialog, "custom-oauth")
     dialog.codex_path.SetValue("C:/Apps/codex.exe")
     dialog.on_save(None)
     assert dialog.result == gui_app.wx.ID_OK
@@ -321,10 +322,10 @@ def test_refresh_models_is_async_scoped_and_preserves_typed_model(gui_app):
     assert not dialog.refresh_button.enabled
     assert not dialog.save_button.enabled
     assert dialog.cancel_button.enabled
-    dialog.model_combo.SetValue("typed-while-refreshing")
+    _choose_model(dialog, "typed-while-refreshing")
     release.set()
     gui_app.wx.pump_until(lambda: not dialog._busy)
-    assert dialog.model_combo.GetValue() == "typed-while-refreshing"
+    assert dialog.model_combo.GetStringSelection() == "typed-while-refreshing"
     assert dialog.model_combo.choices.count("gpt-account-model") == 1
     assert "auto" in dialog.model_combo.choices
     assert settings.openai_model_api == "auto"
@@ -405,7 +406,7 @@ def test_refresh_failure_is_actionable_without_echoing_secrets(gui_app):
     assert "test-key-not-real" not in dialog.status.GetValue()
     assert "?code=" not in dialog.status.GetValue()
     assert dialog.refresh_button.enabled
-    assert dialog.model_combo.GetValue() == "auto"
+    assert dialog.model_combo.GetStringSelection() == "auto"
 
 
 def test_options_opens_real_dialog_with_current_api_selection(gui_app):
@@ -420,6 +421,12 @@ def test_options_opens_real_dialog_with_current_api_selection(gui_app):
     assert dialogs[0].destroyed
     assert gui_app.frame.gestor_settings._enableTranslation
     assert gui_app.wx.focus is options.openai_button
+
+
+def _choose_model(dialog, model: str) -> None:
+    """Przygotowuje dostępną pozycję i wybiera ją jak użytkownik."""
+    dialog.model_combo.Append(model)
+    dialog.model_combo.SetStringSelection(model)
 
 
 class CodexBoundary:
@@ -438,6 +445,14 @@ class CodexBoundary:
     def account(self):
         self.calls.append(("account", threading.get_ident()))
         return self.account_data
+
+    def cached_models(self) -> list[str]:
+        """Udostępnia modele testowego konta bez połączenia z siecią."""
+        return ["gpt-5.6-sol", "gpt-5.6-luna"]
+
+    def list_models(self) -> list[str]:
+        """Symuluje świeże pobranie modeli po logowaniu."""
+        return self.cached_models()
 
     def start_login(self):
         self.calls.append(("start", threading.get_ident()))
@@ -510,7 +525,7 @@ def test_explicit_login_opens_only_trusted_url_and_verifies_account_async(oauth_
     assert "never-show-me" not in dialog.status.GetValue()
     assert "state=" not in dialog.status.GetValue()
     assert app.messages[-1] == dialog.status.GetValue()
-    assert settings.openai_codex_path == ""
+    assert settings.openai_codex_path == "C:/Tools/codex.exe"
     dialog.on_cancel(None)
     assert env.client.account_data["type"] == "chatgpt", "Cancel preferences must not undo explicit login"
 
@@ -604,11 +619,10 @@ def test_oauth_warning_and_installation_guidance_are_visible_without_network(gui
     module = gui_app.load("guis/guis_openai")
     dialog = module.OpenAISettingsDialog(None, gui_app.frame)
     labels = " ".join(widget.label for widget in gui_app.wx.widgets)
-    assert "experimental" in labels.lower()
-    assert "undocumented" in labels.lower()
+    assert "eksperymentalne" in labels.lower()
     assert "https://developers.openai.com/codex/cli" in labels
-    assert "codex.exe" in labels
-    assert "not undone by Cancel" in labels
+    assert "Codex" in labels
+    assert "Anuluj nie cofa logowania" in labels
     assert dialog.codex_path.name
 
 
@@ -628,6 +642,181 @@ def test_late_cancel_after_close_is_harmless(gui_app):
     dialog.Destroy()
     dialog.on_cancel(None)
     dialog.on_key(types.SimpleNamespace(GetKeyCode=lambda: gui_app.wx.WXK_ESCAPE))
+
+
+def test_model_is_standard_noneditable_choice(gui_app):
+    """NVDA powinno dostać zwykłą listę, bez pola edycji."""
+    dialog = gui_app.load("guis/guis_openai").OpenAISettingsDialog(None, gui_app.frame)
+    assert isinstance(dialog.model_combo, gui_app.wx.Choice)
+    assert dialog.model_combo.GetStringSelection() == "auto"
+
+
+def test_oauth_options_hide_key_manager_and_default_key_button(gui_app):
+    """Konto ChatGPT nie może żądać wyboru domyślnego klucza."""
+    gui_app.frame.gestor_settings.openai_auth_mode = "chatgpt"
+    options = gui_app.load("guis/guis_options").ConfigDialog(None, gui_app.frame)
+    options.translator_choice.SetSelection(9)
+    options.on_translator_choice(types.SimpleNamespace(GetString=lambda: "OpenAI (API / ChatGPT OAuth)"))
+    assert not options.api_listbox.shown
+    assert not options.default_button.shown
+    assert not options.api_label.shown
+    options.on_accept(None)
+    assert gui_app.frame.gestor_settings.choiceOnline == 9
+
+
+def test_opening_signed_in_dialog_restores_account_and_models(oauth_app):
+    """Ponowne otwarcie rozpoznaje konto bez klikania odświeżania."""
+    env = oauth_app
+    env.client.account_data = {"type": "chatgpt"}
+    env.client.cached_models = lambda: ["gpt-5.6-sol", "gpt-5.6-luna"]
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    env.app.wx.drain()
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    assert not dialog.login_button.shown
+    assert dialog.logout_button.shown
+    assert dialog.logout_button.enabled
+    assert "gpt-5.6-sol" in dialog.model_combo.choices
+    assert env.app.wx.focus is dialog.auth_choice
+
+
+def test_login_automatically_loads_models_and_activates_account_mode(oauth_app):
+    """Jawne logowanie od razu przygotowuje konto do tłumaczenia."""
+    env = oauth_app
+    loaded = []
+    env.client.cached_models = lambda: loaded.append(True) or ["gpt-5.6-sol"]
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.on_login(None)
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    assert loaded
+    assert "gpt-5.6-sol" in dialog.model_combo.choices
+    assert not dialog.login_button.shown
+    assert env.app.frame.gestor_settings.openai_auth_mode == "chatgpt"
+
+
+def test_login_from_api_mode_persists_chatgpt_even_when_preferences_are_cancelled(oauth_app):
+    """Sukces logowania nie zostawia tłumacza w trybie pustego klucza API."""
+    env = oauth_app
+    settings = env.app.frame.gestor_settings
+    settings.openai_auth_mode = "api_key"
+    settings.api_openai = None
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.auth_choice.SetSelection(1)
+    dialog.on_auth_choice(None)
+    dialog.on_login(None)
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    dialog.on_cancel(None)
+    loaded = type(settings)(None)
+    assert loaded.openai_auth_mode == "chatgpt"
+    assert loaded.api_openai is None
+    assert loaded.choiceOnline == 5
+
+
+def test_use_provider_applies_oauth_without_any_api_key(gui_app):
+    """Wybór silnika i domyślnego klucza to osobne operacje."""
+    settings = gui_app.frame.gestor_settings
+    settings.openai_auth_mode = "chatgpt"
+    settings.api_openai = None
+    dialog = gui_app.load("guis/guis_openai").OpenAISettingsDialog(None, gui_app.frame)
+    dialog.on_use_provider(None)
+    assert settings.choiceOnline == 9
+    assert settings.openai_auth_mode == "chatgpt"
+    assert settings.api_openai is None
+
+
+def test_use_provider_updates_parent_even_with_unsaved_provider_choice(gui_app, monkeypatch):
+    """Rodzic nie może nadpisać jawnego wyboru silnika starą listą."""
+    settings = gui_app.frame.gestor_settings
+    settings.choiceOnline = 9
+    settings.openai_auth_mode = "chatgpt"
+    module = gui_app.load("guis/guis_openai")
+    options = gui_app.load("guis/guis_options").ConfigDialog(None, gui_app.frame)
+    options.select_choice_by_value(5)
+
+    def choose_provider(dialog):
+        dialog.on_use_provider(None)
+        return gui_app.wx.ID_OK
+
+    monkeypatch.setattr(module.OpenAISettingsDialog, "ShowModal", choose_provider)
+    options.on_openai_settings(None)
+    assert options.GetSelectionChoice() == 9
+    assert not options.default_button.shown
+
+
+@pytest.mark.parametrize("payload, expected", [
+    ({"auth_mode": "chatgpt", "tokens": {"access_token": "test-access", "account_id": "test-account"}}, "chatgpt"),
+    ({"auth_mode": "chatgpt", "tokens": {}}, "api_key"),
+    ({"auth_mode": "api_key", "OPENAI_API_KEY": "test-key"}, "api_key"),
+    (None, "api_key"),
+])
+def test_existing_account_recovers_missing_auth_preference(app_modules, payload, expected):
+    """Ustawienia odzyskują wyłącznie poprawną sesję we własnym profilu."""
+    app_modules.conf["TranslateAdvanced"]["api_openai"] = "None"
+    backend = app_modules.load("utils/utils_codex_response")
+    home = app_modules.tmp_path / "nvda" / "TranslateAdvanced" / "codex"
+    home.mkdir(parents=True)
+    (home / backend._MARKER).write_text(backend._MARKER_TEXT, encoding="utf-8")
+    if payload is not None:
+        (home / "auth.json").write_text(json.dumps(payload), encoding="utf-8")
+    settings = app_modules.load("managers/managers_settings").GestorSettings(None)
+    assert settings.openai_auth_mode == expected
+
+
+def test_failed_model_fetch_preserves_confirmed_login(oauth_app):
+    """Awaria listy modeli nie może udawać wylogowania."""
+    env = oauth_app
+    env.client.account_data = {"type": "chatgpt"}
+
+    def unavailable() -> list[str]:
+        raise OSError("prywatny-token-testowy")
+
+    env.client.cached_models = unavailable
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    env.app.wx.drain()
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    assert not dialog.login_button.shown
+    assert dialog.logout_button.enabled
+    assert "zalogowane" in dialog.status.GetValue()
+    assert "prywatny" not in dialog.status.GetValue()
+
+
+def test_auto_check_after_close_does_not_start_process(oauth_app):
+    """Zamknięcie okna przed obsłużeniem kolejki nie uruchamia konta."""
+    env = oauth_app
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.on_cancel(None)
+    dialog.Destroy()
+    env.app.wx.drain()
+    assert not env.factory_calls
+
+
+def test_logout_clears_models_and_restores_login_button(oauth_app):
+    """Wylogowanie usuwa stary wybór i udostępnia ponowne logowanie."""
+    env = oauth_app
+    env.client.account_data = {"type": "chatgpt"}
+    dialog = env.module.OpenAISettingsDialog(None, env.app.frame)
+    dialog.on_account(None)
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    dialog.on_logout(None)
+    env.app.wx.pump_until(lambda: not dialog._busy)
+    assert dialog.login_button.shown and dialog.login_button.enabled
+    assert not dialog.logout_button.shown
+    assert dialog.model_combo.choices == ["auto"]
+    assert dialog.model_combo.GetStringSelection() == "auto"
+
+
+@pytest.mark.parametrize("url", ["https://chatgpt.com/auth/login", "https://auth.openai.com/oauth/authorize"])
+def test_both_official_login_hosts_are_allowed(gui_app, url):
+    """Aktualny protokół może rozpocząć logowanie na obu domenach."""
+    module = gui_app.load("guis/guis_openai")
+    assert module._validated_auth_url(url) == url
+
+
+@pytest.mark.parametrize("url", ["https://chatgpt.com.evil.test/", "https://chatgpt.com@evil.test/", "https://chatgpt.com:444/", "https://chatgpt.com./", "https://chatgpt.com\\@evil.test/"])
+def test_fake_chatgpt_login_hosts_are_rejected(gui_app, url):
+    """Podobna nazwa domeny nie wystarcza do otwarcia przeglądarki."""
+    module = gui_app.load("guis/guis_openai")
+    with pytest.raises(ValueError):
+        module._validated_auth_url(url)
 
 
 def test_missing_codex_error_does_not_echo_tokens_and_explains_installation(oauth_app, monkeypatch):
@@ -682,7 +871,7 @@ def test_native_wx_dialog_smoke_when_wx_is_available(app_modules, monkeypatch):
                 wx.CallLater(20, after_refresh)
                 return
             assert "native-test-model" in dialog.model_combo.GetItems()
-            assert dialog.model_combo.GetValue() == "native-custom-oauth"
+            assert dialog.model_combo.GetStringSelection() == "native-custom-oauth"
             assert settings.openai_model_oauth == "auto"
             dialog.on_save(None)
         except Exception as error:
@@ -694,12 +883,12 @@ def test_native_wx_dialog_smoke_when_wx_is_available(app_modules, monkeypatch):
             assert not settings._enableTranslation
             assert dialog.auth_choice.GetName()
             assert dialog.status.GetWindowStyleFlag() & wx.TE_READONLY
-            assert dialog.model_combo.GetWindowStyleFlag() & wx.CB_DROPDOWN
-            dialog.model_combo.SetValue("native-custom-api")
+            assert isinstance(dialog.model_combo, wx.Choice)
+            _choose_model(dialog, "native-custom-api")
             dialog.auth_choice.SetSelection(1)
             dialog.on_auth_choice(None)
             assert dialog.login_button.IsEnabled()
-            dialog.model_combo.SetValue("native-custom-oauth")
+            _choose_model(dialog, "native-custom-oauth")
             dialog.on_refresh_models(None)
             wx.CallLater(20, after_refresh)
         except Exception as error:

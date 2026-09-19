@@ -1,5 +1,16 @@
 # Modified version: attribution and change record
 
+## Wersja 2026.4 — 19 września 2026
+
+- Potwierdzenie konta ChatGPT w tle po otwarciu ustawień i odpowiednie przyciski logowania lub wylogowania.
+- Automatyczne pobieranie modeli po logowaniu oraz zapis katalogu w osobnym profilu dodatku. Katalog przetrwa restart i odświeżenie tokenu; wylogowanie usuwa go, a inne konto nie korzysta ze starej listy.
+- Standardowa lista rozwijana `wx.Choice` zamiast edytowalnego pola modeli. Krótsze opisy i poprawne skróty klawiaturowe.
+- Osobny przycisk wyboru silnika OpenAI. Tryb ChatGPT ukrywa menedżer kluczy API i nie wymaga klucza.
+- Natychmiastowe zapamiętanie metody po logowaniu oraz odzyskanie lokalnej sesji pozostawionej przez wersję 2026.3 bez wybrania metody ChatGPT.
+- Słyszalne, ograniczone częstotliwością błędy tłumaczenia w locie i pomijanie pustych fragmentów mowy.
+- Oficjalne parametry strony powitalnej ChatGPT i obsługa obu oficjalnych domen rozpoczynających logowanie. Klient pozostaje identyfikowany jako TranslateAdvanced.
+- Nowe testy regresji, sprawdzenia natywnych kontrolek Windows i próba pełnej drogi mowy przez rzeczywistą usługę OAuth. Szczegóły oraz granice w VALIDATION.md.
+
 ## Origin and authorship
 
 **TranslateAdvanced was created by Héctor J. Benítez Corredera** (`hxebolax`, <xebolax@gmail.com>). The official upstream source is <https://github.com/hxebolax/TranslateAdvanced>.

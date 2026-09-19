@@ -555,15 +555,17 @@ def test_real_lazy_oauth_transport_keeps_selected_provider_and_complete_plain_te
     assert all(message.get("method") not in ("turn/start", "thread/start") for message in wire.rpc_messages)
 
 
-def test_oauth_auto_model_is_pinned_even_if_catalog_changes_between_pieces(backend, tmp_path):
+def test_oauth_auto_model_stays_pinned_without_refetch_between_pieces(backend, tmp_path):
+    """Upływ czasu nie zmienia modelu ani nie wymusza ponownego katalogu."""
     with oauth_boundary(backend, tmp_path) as wire:
         wire.change_catalog = True
-        with pytest.raises(backend.TranslationError, match="not available"):
-            backend.TranslatorOpenAI().translate_openai(
-                None, varied_text(), "pl", model="auto", auth_mode="chatgpt",
-                codex_home=str(wire.home), codex_path=str(wire.exe))
-    assert len(wire.bodies) == 1
-    assert wire.bodies[0]["model"] == "gpt-5.6-luna"
+        result = backend.TranslatorOpenAI().translate_openai(
+            None, varied_text(), "pl", model="auto", auth_mode="chatgpt",
+            codex_home=str(wire.home), codex_path=str(wire.exe))
+    assert result == fixture_translation(varied_text())
+    assert len(wire.bodies) >= 2
+    assert {body["model"] for body in wire.bodies} == {"gpt-5.6-luna"}
+    assert sum(message.get("method") == "model/list" for message in wire.rpc_messages) == 1
 
 
 @pytest.mark.parametrize("failure", ["incomplete", "timeout"])

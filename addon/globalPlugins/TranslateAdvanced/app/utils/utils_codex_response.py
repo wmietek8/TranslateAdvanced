@@ -143,6 +143,15 @@ def _auth_headers(codex_home):
     return {"Authorization": "Bearer " + tokens["access_token"], "ChatGPT-Account-Id": tokens["account_id"]}
 
 
+def has_chatgpt_session(codex_home: str) -> bool:
+    """Sprawdza lokalną sesję dodatku bez sieci i odświeżania tokenów."""
+    try:
+        _managed_auth(codex_home)
+    except CodexError:
+        return False
+    return True
+
+
 def needs_refresh(codex_home):
     """An expiry hint only, not JWT authentication or OAuth implementation.
 

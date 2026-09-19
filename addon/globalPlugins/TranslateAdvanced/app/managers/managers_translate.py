@@ -17,6 +17,7 @@ from speech import *
 # Carga estándar
 import re
 import os
+import time
 # Carga personal
 from ..src_translations.src_google_original import TranslatorGoogle
 from ..src_translations.src_google_alternative import TranslatorGooglealternative
@@ -26,7 +27,7 @@ from ..src_translations.src_deepl_original import TranslatorDeepL
 from ..src_translations.src_libretranslate_original import TranslatorLibreTranslate
 from ..src_translations.src_microsoft_api_free import TranslatorMicrosoftApiFree
 from ..src_translations.src_deepl_free import TranslatorDeepLFree
-from ..src_translations.src_openai_4o_api import TranslatorOpenAI
+from ..src_translations.src_openai_4o_api import TranslationError, TranslatorOpenAI
 from ..src_translations.src_detect import DetectorDeIdioma
 from ..managers.managers_dict import LanguageDictionary
 from ..utils.utils_short_translation import postprocess_short_translation
@@ -297,6 +298,9 @@ class GestorTranslate(
 		"""Real-time translation keeps its fixed target and fails back to speech."""
 		settings = self.frame.gestor_settings
 		if not settings._enableTranslation:
+			self._realtime_error_notice = None
+			return text
+		if not text.strip():
 			return text
 		appName = self.get_cache_app_name()
 		if settings.chkCache:
@@ -306,13 +310,30 @@ class GestorTranslate(
 				return cached
 		try:
 			translated = self.translate_with_options(text, self.translation_options())
-		except Exception:
+		except Exception as error:
 			# Incoming speech must remain audible, but no secrets/text in logs.
 			logHandler.log.error("TranslateAdvanced: real-time translation failed; speaking original.")
+			self._report_realtime_error(error, appName)
 			return text
+		self._realtime_error_notice = None
 		if settings.chkCache and translated != text:
 			settings._translationCache.setdefault(appName, {})[text] = translated
 		return translated
+
+	def _report_realtime_error(self, error: Exception, configuration: str) -> None:
+		"""Ogłasza bezpieczny błąd poza tłumaczeniem, najwyżej co pół minuty."""
+		now = time.monotonic()
+		previous = getattr(self, "_realtime_error_notice", None)
+		if previous and previous[0] == configuration and now - previous[1] < 30:
+			return
+		self._realtime_error_notice = (configuration, now)
+		message = _("Tłumaczenie w locie nie powiodło się. Sprawdź wybrany silnik i jego ustawienia.")
+		if isinstance(error, TranslationError):
+			# Ten wyjątek zawiera wyłącznie komunikaty zaufanego adaptera.
+			message += " " + _(str(error))
+		speak = getattr(self.frame.gestor_settings, "_nvdaSpeak", None)
+		if callable(speak):
+			speak(speechSequence=[message], priority=None)
 
 	def speak(self, speechSequence: SpeechSequence, priority: Spri = None):
 		"""

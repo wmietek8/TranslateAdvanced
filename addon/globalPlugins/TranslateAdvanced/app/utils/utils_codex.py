@@ -11,11 +11,10 @@ Account protocol: https://learn.chatgpt.com/docs/app-server
 Source audit: https://github.com/openai/codex/tree/rust-v0.155.0/codex-rs
 Only stdlib is used, so the module is independently testable outside NVDA.
 """
-from contextlib import contextmanager
+import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import platform
 import re
 import shutil
@@ -23,10 +22,12 @@ import subprocess
 import tempfile
 import threading
 import time
+from contextlib import contextmanager
+from pathlib import Path
 from urllib.parse import urlsplit
+
 from . import utils_codex_response as responses
 from .utils_codex_response import CodexError
-
 
 _MARKER_NAME = ".translateadvanced-managed"
 _MARKER = "TranslateAdvanced Codex OAuth storage v1\n"
@@ -432,6 +433,7 @@ class CodexClient:
                     result_models = list(models)
                     with self._state:
                         self._model_cache = (time.monotonic(), cache_key, tuple(result_models))
+                    self._store_model_catalog(cache_key, result_models)
                     return result_models
                 if not _safe_string(cursor, 4096) or cursor in seen_cursors:
                     raise CodexError("Codex returned invalid model pagination; no partial catalog was returned.")
@@ -440,21 +442,95 @@ class CodexClient:
 
     def _catalog_key(self, account):
         try:
+            tokens = responses._managed_auth(self._home_value)["tokens"]
+            return (account.get("type"), account.get("email"), tokens["account_id"])
+        except CodexError:
+            # Uszkodzone dane nigdy nie pasują do katalogu poprawnego konta.
+            pass
+        try:
             info = (Path(self._home_value) / "auth.json").stat()
             stamp = (info.st_mtime_ns, info.st_size, info.st_ino)
         except OSError:
             stamp = None
         return (account.get("type"), account.get("email"), stamp)
 
+    def _model_catalog_path(self) -> Path:
+        return self._prepare_home() / "translateadvanced-models.json"
+
+    @staticmethod
+    def _catalog_fingerprint(key: tuple) -> str:
+        return hashlib.sha256(repr(key).encode("utf-8")).hexdigest()
+
+    def _load_model_catalog(self, key: tuple) -> list[str] | None:
+        try:
+            path = self._model_catalog_path()
+            if path.is_symlink() or path.stat().st_size > 262144:
+                return None
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if (not isinstance(data, dict) or data.get("version") != 1
+                    or data.get("account") != self._catalog_fingerprint(key)):
+                return None
+            models = data.get("models")
+            if (not isinstance(models, list) or len(models) > 10000
+                    or any(not isinstance(model, str)
+                           or not responses._MODEL.fullmatch(model) for model in models)):
+                return None
+            return list(dict.fromkeys(models))
+        except (OSError, ValueError, UnicodeError, RecursionError):
+            return None
+
+    def _store_model_catalog(self, key: tuple, models: list[str]) -> None:
+        temporary = None
+        try:
+            path = self._model_catalog_path()
+            if path.is_symlink():
+                return
+            data = {"version": 1, "account": self._catalog_fingerprint(key), "models": models}
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=path.parent,
+                prefix=".models-", suffix=".tmp", delete=False,
+            ) as stream:
+                temporary = Path(stream.name)
+                json.dump(data, stream, ensure_ascii=True)
+            os.replace(temporary, path)
+        except OSError:
+            # Brak zapisu pamięci podręcznej nie unieważnia pobranej listy.
+            pass
+        finally:
+            if temporary is not None:
+                try:
+                    temporary.unlink(missing_ok=True)
+                except OSError:
+                    pass
+
+    def _clear_model_catalog(self) -> None:
+        with self._state:
+            self._model_cache = None
+        try:
+            self._model_catalog_path().unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    def cached_models(self) -> list[str]:
+        """Zwraca zapamiętane modele konta; pobiera je przy braku katalogu."""
+        with self._operation():
+            return self._catalog_for_translation()
+
     def _catalog_for_translation(self):
         account = self.account()  # Cheap local check; never refreshes credentials.
         if account.get("type") != "chatgpt":
+            self._clear_model_catalog()
             raise CodexError("Sign in to ChatGPT before translating.")
         key = self._catalog_key(account)
         with self._state:
             cache = self._model_cache
-            if cache and cache[1] == key and 0 <= time.monotonic() - cache[0] < 60:
+            if cache and cache[1] == key:
                 return list(cache[2])
+        stored = self._load_model_catalog(key)
+        if stored is not None:
+            with self._state:
+                self._model_cache = (time.monotonic(), key, tuple(stored))
+            return stored
         return self.list_models()  # Public refresh always enumerates live pages.
 
     def translate(self, text, target_language, alternate_language=None, source_language="auto", model="auto"):
@@ -492,14 +568,17 @@ class CodexClient:
                 self.cancel_login(self._active_login)
             result = self._rpc("account/login/start", {
                 "type": "chatgpt", "codexStreamlinedLogin": False,
-                "useHostedLoginSuccessPage": False,
+                "useHostedLoginSuccessPage": True, "appBrand": "chatgpt",
             })
             login_id, url = result.get("loginId"), result.get("authUrl")
             try:
                 parts = urlsplit(url) if isinstance(url, str) else None
                 valid = (result.get("type") == "chatgpt" and _safe_string(login_id, 256)
                          and _safe_string(url, 16384) and parts.scheme == "https"
-                         and parts.hostname == "auth.openai.com" and parts.port in (None, 443)
+                         and parts.netloc.lower() in (
+                             "auth.openai.com", "auth.openai.com:443",
+                             "chatgpt.com", "chatgpt.com:443",
+                         ) and "\\" not in url and not any(ord(char) <= 32 or ord(char) == 127 for char in url)
                          and parts.username is None and parts.password is None)
             except ValueError:
                 valid = False
@@ -564,6 +643,7 @@ class CodexClient:
             self._rpc("account/logout")
             if self.account():
                 raise CodexError("Codex did not confirm sign-out. Reconnect and check account status.")
+            self._clear_model_catalog()
 
     def close(self):
         """Cancel pending login, terminate only our process, release waiters."""

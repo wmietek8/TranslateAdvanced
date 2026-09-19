@@ -1,61 +1,47 @@
-# TranslateAdvanced 2026.3: verification and limits
+﻿# TranslateAdvanced 2026.4 — sprawdzenia i ograniczenia
 
-Checks performed on Windows on 2026-09-19. This describes observed results, not a promise that a remote translation service will never change or mistranslate a sentence.
+Sprawdzenia wykonano na Windows 19 września 2026. Dokument opisuje wyniki prób, bez gwarancji bezbłędnego działania zewnętrznych usług w przyszłości.
 
-## Automated regression tests
+## Testy automatyczne
 
-- Python 3.13.15 with native wxPython 4.3.1 / wxWidgets 3.3.3: **346 passed, 144 subtests passed**, no skips or failures.
-- Python 3.11: **345 passed, 1 skipped, 144 subtests passed**. The skipped test requires native wxPython, which is exercised by the Python 3.13 run.
-- Tests exercise real command, manager and provider implementations. NVDA, network and Win32 boundaries are substituted where required; unit tests do not touch a user's real clipboard or credentials.
-- Coverage includes primary/alternate direction, explicit source-language routing, selected-provider routing for short/long/GUI input, strict errors, busy-state cleanup, cancellation, newer and same-text recopies, delayed rendering, native clipboard handle ownership and rollback, model selection, API responses, OAuth/SSE completion and commentary, redirects/TLS, auth-session shutdown races, request/output budgets, UI preferences, and Polish localization.
-- Regression fixes were developed with failing tests before their production changes. Tests retain the existing catalog and attribution checks.
+- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **376 testów oraz 144 podtesty zaliczone**, bez pominięć.
+- Python 3.11: pełny przebieg przed ostatnim dodatkowym testem — **374 testy oraz 144 podtesty zaliczone, jeden pominięty**. Po dodaniu ostatniego testu ponownie sprawdzono cały plik ustawień: **57 zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
+- Osiem nowych testów przed zmianami odtworzyło zgłoszone błędy. Następnie rozszerzono zestaw o migrację zapisanej sesji, anulowanie, spóźnione odpowiedzi, ponowne otwieranie, awarię katalogu, zmianę konta, odświeżenie tokenu, zapis katalogu i wybór silnika w oknie nadrzędnym.
+- Testy uruchamiają kod dodatku; podmienione są granice NVDA, procesów zewnętrznych i sieci. Testy automatyczne nie czytają rzeczywistych danych konta ani schowka.
+- Zachowano regresje dotyczące schowka, kierunku tłumaczenia, formatowania, długiego tekstu, kompletności odpowiedzi, TLS, przekierowań i innych silników.
 
-Reproduction:
+Odtworzenie na Windows:
 
-```sh
-uv run --no-project --python 3.13 --with pytest --with polib --with wxPython python -B -m pytest tests -q
-uv run --no-project --python 3.11 --with pytest --with polib python -B -m pytest tests -q
+```text
+uv run --no-project --python 3.13 --with pytest --with polib --with wxPython python -X utf8 -B -m pytest tests -q
+uv run --no-project --python 3.11 --with pytest --with polib python -X utf8 -B -m pytest tests -q
+uv run --no-project --python 3.13 --with pytest --with wxPython python -X utf8 -B tests/live_openai_ui_smoke.py
 ```
 
-## Real services and Windows clipboard
+Zmierzono pokrycie wykonywalnych linii dla 375 testów poprzedzających ostatni dodatkowy przypadek zapisu metody logowania: okno OpenAI 94,2%, klient Codex 89,5%, transport odpowiedzi OAuth 90,3%, menedżer tłumaczeń 81,8%. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
 
-The recorded native runs executed the actual clipboard command, translation manager, provider HTTPS, wx main loop and Win32 clipboard. Only NVDA's surrounding host/speech boundary was substituted. The tests confirmed that the exact text passed to speech had already reached the real clipboard.
+Kontrola importów i niezdefiniowanych nazw obejmuje zmieniane moduły okna/klienta oraz nową próbę mowy; `_` jest dostarczane przez NVDA. Nie ogłaszamy całego odziedziczonego projektu jako wolnego od wszystkich ostrzeżeń stylistycznych. Kontrola różnic Git sprawdza również białe znaki.
 
-**Eight cases passed:** Polish to English and English to Polish, both short and long, through both DeepL API Pro and OpenAI ChatGPT OAuth. The long samples contained 40 numbered paragraphs, with 4,469 and 4,349 input characters. Number/order of paragraph markers and newline counts were checked; a plausible-looking but shortened output was not accepted.
+## Rzeczywiste próby
 
-Observed total times in that run (network/account/model dependent):
+- `live_codex_smoke.py`: tłumaczenia PL↔EN z wyborem `auto`, `gpt-6-astra` oraz jawnie wskazanym `gpt-5.6-sol`. Każdy wynik był niepusty i różnił się od tekstu źródłowego.
+- `live_realtime_oauth.py`: rzeczywista droga `GestorTranslate.speak` → wybrany model OAuth → tekst przekazany do granicy mowy NVDA. PL→EN i EN→PL dla `gpt-5.6-sol`; zachowane komendy mowy oraz odstępy. Ponowna wypowiedź użyła pamięci tłumaczeń. Ponownie utworzony klient odzyskał katalog z dysku bez ponownego `model/list`.
+- `live_openai_ui_smoke.py`: natywne, ukryte kontrolki wx/Windows. Potwierdzono typ `wx.Choice`, styl `CBS_DROPDOWNLIST` i brak podrzędnego pola `Edit`, nazwy dostępności, niezależne wybory modeli oraz przywrócenie tłumaczenia po zamknięciu.
+- `live_codex_login_smoke.py`: start oficjalnego logowania i jego anulowanie w osobnym profilu. Nowe parametry strony powitalnej zostały przyjęte, a proces pomocniczy poprawnie zamknięty. Przeglądarka nie została otwarta.
+- Próby tłumaczenia użyły odizolowanej kopii samego dostępu konta dodatku. Nie kopiowano ani nie obracano tokenu odświeżania. Suma pliku oryginalnego konta pozostała taka sama.
+- Próby tej wersji nie odczytywały ani nie zmieniały rzeczywistego schowka i nie przeładowywały działającego NVDA.
 
-- DeepL short: 0.622 / 0.390 seconds; long: 1.031 / 0.691 seconds.
-- OpenAI OAuth short: 2.002 / 1.474 seconds; long: 24.911 / 32.938 seconds.
+## Granice sprawdzenia
 
-A separate process tried to acquire the clipboard during every final translation write and was correctly excluded in all eight cases. Every final run verified restoration of all original supported clipboard formats. These live probes are opt-in: do not run them while another user is copying or pasting. Test code retains a private recovery file if restoration cannot be verified, and does not overwrite a newer user copy. No recovery data is included in the source repository or release archive.
+- Nie przeprowadzono odsłuchu gestu wewnątrz działającego procesu NVDA. Przechwycenie tekstu na granicy mowy nie jest odsłuchem syntezatora. Nową wersję trzeba zainstalować i uruchomić NVDA ponownie.
+- Nie przeprowadzono pełnego nowego logowania użytkownika przez przeglądarkę. Sprawdzenie startu/anulowania oraz istniejącego dostępu nie zastępuje takiej próby.
+- `appBrand=chatgpt` wybiera oficjalną stronę powitalną ChatGPT. Ekran zgody, klient OAuth i ewentualna konfiguracja organizacji nadal należą do OpenAI/Codexa; nie obiecujemy usunięcia nazwy Codex z każdego ekranu.
+- Tryb konta korzysta z eksperymentalnego, nieudokumentowanego publicznie transportu tłumaczeń ChatGPT/Codex. Oficjalny app-server obsługuje konto i modele; tłumacz nie uruchamia wątku agenta ani narzędzi modelu. Dokumentacja: https://learn.chatgpt.com/docs/app-server.
+- Nie wykonywano nowych płatnych wywołań kluczem API OpenAI ani rzeczywistych prób wszystkich pozostałych dostawców. Zachowano ich testy deterministyczne.
+- Tłumaczenie w locie nadal czeka na zewnętrzny model. W końcowej próbie dwóch zdań `gpt-5.6-sol` potrzebował 2,747 i 2,927 sekundy na pierwsze tłumaczenie. Czas i jakość zależą od usługi, modelu i tekstu.
 
-Further observed checks:
+## Paczka i publikacja
 
-- After those write tests, the final native reentrancy guard was added. `live_native_readonly.py` then confirmed actual Windows same-HWND reopen behavior, rejection of nested reads, continued exclusion of a second process, an unchanged sequence while locked, and successful guard reuse. This final delta was checked without reading or changing clipboard data; the full write tests were not rerun after that guard-only change.
-- The final independent review of the OpenAI/OAuth scope found no blockers. Native reentrancy and DeepL localization fixes passed a further independent scoped review. Legacy Google/Microsoft integration fixes were separately checked against their reproduced failures and the full test suite.
-- Real OAuth inference with explicit `gpt-6-astra` and the default-selected `gpt-5.6-luna`, in both language directions.
-- Earlier long repeated-line tests, followed by the distinct numbered-paragraph tests above.
-- Hidden native wx OpenAI dialog construction and accessible control names, without reloading the running NVDA instance.
-- Official Codex initialize/account/model discovery and a real isolated login start/cancel cycle, with process cleanup.
-- OAuth translation tests used an isolated access-only copy; they did not copy or rotate the personal Codex refresh token. The original auth file was compared after testing and remained unchanged.
+Paczka jest budowana przez SCons. `tests/audit_addon.py` sprawdza ZIP, wersję, zgodność wszystkich plików Pythona ze źródłami, składnię, polski katalog, pomoc PL/EN, licencję i oryginalnego autora. Audyt odrzuca pliki kont, kluczy, testów, logów i pamięci podręcznej; sprawdza też rzeczywiste wartości przekazanych lokalnie sekretów, nie wypisując ich.
 
-The test machine had Codex CLI 0.155.0. The add-on does not require precisely that version; upstream protocol changes can still break the experimental transport.
-
-## What was not proven
-
-- **No real paid OpenAI API-key inference:** no OpenAI API key was configured for this task. API request/response/error/redirect behavior was tested with deterministic substitutes and loopback HTTP, not represented as a real paid API success.
-- **No complete first-time browser login by the user:** starting/cancelling the official login flow and inference with existing isolated access are not a substitute for completing a new browser login.
-- **No gesture/voice test inside the running NVDA process:** native clipboard and wx behavior were real, but speech was captured at the NVDA boundary, not judged by listening. The installed, running add-on was not replaced or restarted. Installing the new package and restarting NVDA remain necessary.
-- No claim of exhaustive linguistic accuracy or a universal best translation model. `auto` is a practical preference over available models; explicit models never silently fall back.
-- Legacy providers other than the tested DeepL API and OpenAI paths were covered by routing regression tests, not live account tests for every vendor.
-
-## Transport and packaging checks
-
-OpenAI key mode uses the public Responses API. ChatGPT mode uses the official Codex app-server for login/account/model management, but inference uses an **experimental, undocumented ChatGPT/Codex endpoint**. No agent thread/turn is started for clipboard text and no model-controlled tools are enabled. This is not advertised as a stable public third-party OAuth API.
-
-Static analysis is compared against the original fork baseline. The repository has existing lint findings and NVDA-injected translation names; it is not described as globally lint-clean. Newly flagged process launch and cleanup patterns are independently reviewed rather than suppressed wholesale.
-
-`tests/audit_addon.py` audits the built archive: ZIP integrity, matching version and Python sources, compilation, Polish catalog, PL/EN help, original author/GPL, absence of auth/config/test/cache files, and absence of explicitly supplied private credential values. Build and release hashes are published with the release, not invented here.
-
-Live reports and raw private diagnostics remain local. This document deliberately contains no API keys, auth tokens, personal clipboard contents or recovery files.
+Raporty prób kont i szczegółowe pokrycie pozostają lokalne. Publiczne wydanie zawiera paczkę dodatku i plik z jej sumą SHA-256. Wynik publikacji jest odnotowany w dzienniku prac.

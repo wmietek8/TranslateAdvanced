@@ -7,9 +7,9 @@
 > original copyright notices and is distributed under GNU GPL v2. See
 > `COPYING.txt` and `MODIFICATIONS.md`.
 
-## Update 2026.3 / Aktualizacja 2026.3
+## Aktualizacja 2026.4
 
-New bidirectional clipboard translation and configurable OpenAI API / experimental ChatGPT OAuth. See [Polish instructions](USER_GUIDE_PL.md) and [English instructions](USER_GUIDE_EN.md). Both guides are included as NVDA add-on help. The original manual follows below.
+Poprawiono rozpoznawanie konta ChatGPT, automatyczne pobieranie i zapamiętywanie modeli, dostępność listy modeli oraz wybór silnika bez klucza API. Logowanie prosi o stronę powitalną ChatGPT. Szczegóły: [instrukcja po polsku](USER_GUIDE_PL.md), [instrukcja po angielsku](USER_GUIDE_EN.md), [wykonane sprawdzenia](VALIDATION.md) i [dziennik zmian](DZIENNIK_PRAC.md). Obie instrukcje są dołączone do pomocy dodatku.
 
 <h2 id="indice">Índice</h2>
 

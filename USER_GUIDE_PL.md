@@ -1,10 +1,10 @@
-# TranslateAdvanced 2026.3: schowek w obie strony i OpenAI
+# TranslateAdvanced 2026.4: konto ChatGPT, modele i tłumaczenie w locie
 
 To społecznościowy fork dodatku autorstwa Héctora J. Beníteza Corredera (hxebolax), rozwijany przez Axela (wmietek8). Oryginalne autorstwo i licencja GNU GPL v2 pozostają zachowane. Kod źródłowy: https://github.com/wmietek8/TranslateAdvanced. Szczegóły zmian są w `MODIFICATIONS.md`.
 
 ## Instalacja bez tracenia obecnych ustawień
 
-Otwórz paczkę `TranslateAdvanced-2026.3.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
+Otwórz paczkę `TranslateAdvanced-2026.4.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
 
 Sama paczka nie zawiera kluczy API ani zalogowanego konta. Przekazanie jej znajomym nie przekazuje dostępu do Twoich usług. Każdy konfiguruje swoje konto lub swój klucz.
 
@@ -38,8 +38,8 @@ Nowa wspólna ścieżka obsługuje tekst do **24 000 znaków**. Dłuższy tekst 
 1. W istniejącym menedżerze kluczy API dodaj klucz usługi OpenAI i wybierz go.
 2. Wybierz silnik **OpenAI (API / ChatGPT OAuth)**.
 3. Otwórz jego dodatkowe ustawienia. W polu uwierzytelniania wybierz **klucz API**.
-4. Użyj **Odśwież modele**, aby pobrać listę dostępną dla tego klucza. Możesz też wpisać dokładny identyfikator modelu, jeśli go znasz.
-5. Zapisz ustawienia OpenAI, a potem ustawienia głównego okna.
+4. Użyj **Odśwież modele**, aby pobrać listę dostępną dla tego klucza. Wybierz model ze zwykłej listy rozwijanej albo pozostaw `auto`.
+5. **Zapisz** zachowuje ustawienia. **Używaj tego silnika** dodatkowo ustawia OpenAI jako silnik tłumaczenia. Główne okno pokazuje wtedy właściwy wybór.
 
 Tryb API używa publicznego OpenAI Responses API i jest rozliczany oddzielnie od abonamentu ChatGPT. Sam abonament ChatGPT nie zapewnia środków na API. Lista `/models` wskazuje widoczne modele, ale nie jest gwarancją, że każdy z nich obsługuje wymagany format odpowiedzi lub że konto ma dostępne środki.
 
@@ -52,8 +52,13 @@ Domyślne **auto** wybiera dostępny model z zalecanej listy. Dla API pierwszą 
 1. Zainstaluj oficjalny **Codex CLI dla Windows** według instrukcji https://developers.openai.com/codex/cli. Jest potrzebny tylko w trybie ChatGPT, nie w trybie klucza API.
 2. W dodatkowych ustawieniach OpenAI wybierz **ChatGPT OAuth**. Ścieżkę do `codex.exe` można zostawić pustą, jeśli jest wykrywany automatycznie, albo wskazać pełną ścieżkę do oficjalnego pliku wykonywalnego. W to pole nie wpisuj klucza ani tokenu.
 3. Naciśnij **Zaloguj się do ChatGPT**. Dokończ logowanie w przeglądarce na stronie OpenAI. Hasła nie podajesz w dodatku.
-4. Wróć do okna dodatku i sprawdź komunikat w polu **Stan**. Przycisk **Sprawdź konto** potwierdza stan sesji.
-5. Użyj **Odśwież modele** i wybierz model dostępny w tej sesji albo zostaw `auto`. Zapisz ustawienia.
+4. Po zalogowaniu dodatek automatycznie potwierdza konto, pobiera modele i ukrywa przycisk logowania. Pojawia się przycisk **Wyloguj**. Przy ponownym otwarciu konta nie trzeba sprawdzać ręcznie; okno robi to w tle.
+5. Wybierz model ze zwykłej listy **Model** albo zostaw `auto`. Lista jest zapisana w profilu NVDA, także po restarcie, aż do wylogowania lub zmiany konta. **Odśwież modele** służy do ręcznego pobrania nowszej listy, a nie do obowiązkowego klikania przy każdym otwarciu.
+6. Naciśnij **Używaj tego silnika**, aby wybrać OpenAI do tłumaczenia. Następnie włącz tłumaczenie w locie gestem **NVDA+Shift+T**. Konto ChatGPT nie wymaga żadnego klucza API. Menedżer kluczy i jego przycisk „Domyślny” są w tym trybie ukryte.
+
+Samo pomyślne logowanie od razu zapisuje metodę ChatGPT i ścieżkę programu obsługującego logowanie. Jeśli wersja 2026.3 zachowała konto, lecz nie zapisała tej metody, aktualizacja rozpoznaje lokalną sesję dodatku przy braku wybranego klucza OpenAI. Nie zmienia przy tym wyboru innych silników.
+
+Dodatek przedstawia się jako **TranslateAdvanced** i prosi oficjalny mechanizm logowania o stronę powitalną **ChatGPT**. Sam proces nadal korzysta z klienta OAuth Codexa; treści ekranu zgody oraz sytuacji wymagających konfiguracji organizacji nie ustala dodatek. Nie wszystkie ekrany OpenAI muszą więc wyświetlać nazwę dodatku.
 
 Logowanie do dodatku jest oddzielone od zwykłej konfiguracji programistycznego Codexa. Dane sesji trafiają do `TranslateAdvanced/codex` w katalogu konfiguracji NVDA, nie do katalogu instalacyjnego dodatku. Wylogowanie dotyczy tej osobnej sesji. Chroń katalog konfiguracji, szczególnie przy przenośnej instalacji NVDA; może zawierać klucze i dane logowania. Nie wysyłaj go znajomym razem z dodatkiem.
 
@@ -65,7 +70,8 @@ Model nie dostaje dostępu do plików, terminala, przeglądarki ani narzędzi ag
 
 - Tekst jest wysyłany do wybranego dostawcy. Nie tłumacz haseł ani innych informacji, których nie chcesz przekazywać tej usłudze. Historia i opcjonalny cache dodatku mogą zachowywać tłumaczone treści lokalnie.
 - Błędy uwierzytelniania wymagają sprawdzenia klucza albo ponownego zalogowania. Błąd limitu wymaga poczekania lub sprawdzenia planu/rozliczeń; dodatek nie obchodzi limitów.
-- Przy braku modelu odśwież listę i wybierz dostępny model. Wpisuj identyfikator dokładnie, np. `gpt-6-astra`, a nie jego opisową nazwę.
+- Przy braku modelu odśwież listę i wybierz dostępny model, np. `gpt-6-astra`. Wcześniejszy zapisany model pozostaje widoczny, dopóki nie wybierzesz innego lub nie wylogujesz konta.
+- Jeśli tłumaczenie w locie się nie powiedzie, NVDA odczytuje oryginał i krótki komunikat o błędzie. Powtarzający się błąd jest ograniczony do jednego powiadomienia na pół minuty; treść prywatnych wyjątków nie jest odczytywana.
 - Wynik identyczny z oryginałem nie jest ogłaszany jako udane tłumaczenie schowka. Może oznaczać już właściwy język, nazwę własną albo odpowiedź, której model nie zmienił.
 - Tłumaczenie schowka odbywa się poza głównym wątkiem NVDA. Tłumaczenie każdej wypowiedzi w locie nadal zależy od szybkości wybranej usługi; duży model OpenAI może wprowadzać zauważalne opóźnienia.
 - Po ręcznej aktualizacji plików dodatku konieczne jest ponowne uruchomienie NVDA. Testy poza procesem NVDA nie oznaczają, że uruchomiona już instancja załadowała nową wersję.

@@ -235,6 +235,13 @@ class GestorSettings:
 		self.openai_model_api = self.getConfig("openai_model_api")
 		self.openai_model_oauth = self.getConfig("openai_model_oauth")
 		self.openai_codex_path = self.getConfig("openai_codex_path")
+		# Wersja 2026.3 mogła zapisać konto bez wybrania metody logowania.
+		if self.openai_auth_mode == "api_key" and self.api_openai is None:
+			from ..utils.utils_codex_response import has_chatgpt_session
+			account_home = os.path.join(self.dir_root_config, "TranslateAdvanced", "codex")
+			if has_chatgpt_session(account_home):
+				self.openai_auth_mode = "chatgpt"
+				self.setConfig("openai_auth_mode", "chatgpt")
 		self.snd_vol = self.getConfig("snd_vol")
 		self.snd_vel = self.getConfig("snd_vel")
 		self.snd_rw = self.getConfig("snd_rw")

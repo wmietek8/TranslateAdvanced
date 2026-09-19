@@ -90,6 +90,42 @@ class RoutingTests(unittest.TestCase):
         self.assertIsNone(calls[0]['alternate_language'])
         self.assertEqual('pl', calls[0]['target_language'])
 
+    def test_speech_hook_translates_oauth_and_preserves_commands(self):
+        """Cała wypowiedź korzysta z konta, zachowując komendy NVDA."""
+        self.settings.choiceOnline = 9
+        self.settings.api_openai = None
+        self.settings.openai_auth_mode = 'chatgpt'
+        self.settings.openai_model_oauth = 'gpt-5.6-sol'
+        spoken, calls = [], []
+        command = object()
+        self.settings._nvdaSpeak = lambda **kwargs: spoken.append(kwargs)
+        self.manager.translate_openai = lambda key, text, **kwargs: calls.append((key, text, kwargs)) or 'Witaj'
+        self.manager.speak(['Hello', command, ' '], priority='normal')
+        self.assertEqual([{'speechSequence': ['Witaj', command, ' '], 'priority': 'normal'}], spoken)
+        self.assertEqual(1, len(calls))
+        self.assertIsNone(calls[0][0])
+        self.assertEqual('chatgpt', calls[0][2]['auth_mode'])
+        self.assertEqual('gpt-5.6-sol', calls[0][2]['model'])
+        self.assertEqual('Witaj ', self.settings._lastTranslatedText)
+
+    def test_realtime_failure_announced_once_without_private_error_text(self):
+        """Awaria jest słyszalna, ale nie ujawnia prywatnych danych."""
+        spoken = []
+        self.settings._nvdaSpeak = lambda **kwargs: spoken.append(kwargs)
+
+        def fail(*args, **kwargs):
+            raise RuntimeError('prywatny-token-ani-tekst-nie-moze-wyjsc')
+
+        self.manager.translate_with_options = fail
+        self.manager.speak(['Hello'])
+        self.manager.speak(['World'])
+        self.assertEqual(3, len(spoken))
+        self.assertIn('nie powiodło', spoken[0]['speechSequence'][0])
+        self.assertEqual(['Hello'], spoken[1]['speechSequence'])
+        self.assertEqual(['World'], spoken[2]['speechSequence'])
+        self.assertNotIn('prywatny', repr(spoken))
+        self.assertEqual({}, self.settings._translationCache[self.manager.get_cache_app_name()])
+
     def test_missing_stale_key_is_rejected_cleanly_not_indexed(self):
         self.manager.frame.gestor_apis.get_api = lambda *a: None
         self.assertEqual((None, None), self.manager.get_api())

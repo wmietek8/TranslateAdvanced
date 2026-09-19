@@ -2809,3 +2809,81 @@ msgstr "DeepL: błąd HTTP {}"
 #: globalPlugins/TranslateAdvanced/app/src_translations/src_deepl_original.py
 msgid "DeepL: translation failed."
 msgstr "DeepL: nie udało się przetłumaczyć tekstu."
+
+
+# Poprawki konta ChatGPT i dostępności w wersji 2026.4.
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:135
+msgid "&Używaj tego silnika"
+msgstr "Używaj tego &silnika"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:128
+msgid ""
+"Logowanie i wylogowanie działają od razu. Zapisz zachowuje ustawienia; "
+"Używaj tego silnika dodatkowo wybiera OpenAI do tłumaczenia. Anuluj nie cofa"
+" logowania."
+msgstr ""
+"Logowanie i wylogowanie działają od razu. Zapisz zachowuje ustawienia; "
+"Używaj tego silnika dodatkowo wybiera OpenAI do tłumaczenia. Anuluj nie cofa"
+" logowania."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:284
+msgid "Modele odświeżone. Wybierz model z listy."
+msgstr "Modele odświeżone. Wybierz model z listy."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:105
+msgid "Model"
+msgstr "Model"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:115
+msgid ""
+"Logowanie obsługuje oficjalny program Codex. Zostaw ścieżkę pustą, jeśli "
+"jest zainstalowany. Instrukcja: https://developers.openai.com/codex/cli. "
+"Tłumaczenie przez konto ChatGPT jest eksperymentalne."
+msgstr ""
+"Logowanie obsługuje oficjalny program Codex. Zostaw ścieżkę pustą, jeśli "
+"jest zainstalowany. Instrukcja: https://developers.openai.com/codex/cli. "
+"Tłumaczenie przez konto ChatGPT jest eksperymentalne."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:106
+msgid ""
+"Wybierz model z listy. Opcja auto dobiera dostępny model. Wybory dla konta "
+"ChatGPT i klucza API są zapisywane osobno."
+msgstr ""
+"Wybierz model z listy. Opcja auto dobiera dostępny model. Wybory dla konta "
+"ChatGPT i klucza API są zapisywane osobno."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:103
+msgid "&Model:"
+msgstr "&Model:"
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:130
+msgid "Gotowe."
+msgstr "Gotowe."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:102
+msgid ""
+"Konto ChatGPT nie wymaga klucza API. Po zalogowaniu modele pobierają się "
+"automatycznie i są zapamiętywane do wylogowania."
+msgstr ""
+"Konto ChatGPT nie wymaga klucza API. Po zalogowaniu modele pobierają się "
+"automatycznie i są zapamiętywane do wylogowania."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:322
+msgid ""
+"Konto ChatGPT jest zalogowane. Nie udało się pobrać modeli; możesz ponowić "
+"odświeżanie."
+msgstr ""
+"Konto ChatGPT jest zalogowane. Nie udało się pobrać modeli; możesz ponowić "
+"odświeżanie."
+
+#: globalPlugins/TranslateAdvanced/app/guis/guis_openai.py:284
+msgid "Usługa nie zwróciła modeli. Spróbuj odświeżyć listę później."
+msgstr "Usługa nie zwróciła modeli. Spróbuj odświeżyć listę później."
+
+#: globalPlugins/TranslateAdvanced/app/managers/managers_translate.py:330
+msgid ""
+"Tłumaczenie w locie nie powiodło się. Sprawdź wybrany silnik i jego "
+"ustawienia."
+msgstr ""
+"Tłumaczenie w locie nie powiodło się. Sprawdź wybrany silnik i jego "
+"ustawienia."

@@ -1,4 +1,4 @@
-# TranslateAdvanced 2026.3
+# TranslateAdvanced 2026.4
 
 Community fork of TranslateAdvanced by Héctor J. Benítez Corredera (hxebolax), maintained by Axel (wmietek8). Original notices and GNU GPL v2 remain intact. This is not an official upstream release. See `COPYING.txt` and `MODIFICATIONS.md`. Source: https://github.com/wmietek8/TranslateAdvanced.
 
@@ -6,7 +6,7 @@ For detailed Polish instructions, see the Polish add-on help or `USER_GUIDE_PL.m
 
 ## Clipboard translation
 
-Install `TranslateAdvanced-2026.3.nvda-addon` as an update and restart NVDA when prompted. Existing provider choices and API keys are retained.
+Install `TranslateAdvanced-2026.4.nvda-addon` as an update and restart NVDA when prompted. Existing provider choices and API keys are retained.
 
 Select DeepL API Free/Pro or OpenAI, enable automatic language switching, and choose the existing primary and alternate languages. With Polish as primary and English as alternate, NVDA+Shift+C translates Polish into English and other detected languages into Polish. Disabling automatic switching uses the selected provider's normal target language.
 
@@ -24,11 +24,13 @@ The public Responses API is billed separately from ChatGPT subscriptions. A visi
 
 ## ChatGPT OAuth: experimental
 
-Install the official Windows Codex CLI from https://developers.openai.com/codex/cli. It is only needed for ChatGPT mode. Select **ChatGPT OAuth**, leave the executable field empty for automatic discovery or enter the full path to `codex.exe`, and choose **Log in to ChatGPT**. Complete the OpenAI browser flow, check the account status, refresh models, and save.
+Install the official Windows Codex CLI from https://developers.openai.com/codex/cli. It is only needed for ChatGPT mode. Select **ChatGPT OAuth**, leave the executable field empty for automatic discovery or enter the full path to `codex.exe`, and choose **Log in to ChatGPT**. Complete the OpenAI browser flow. The add-on confirms the account, switches to ChatGPT authentication and loads models automatically. The model list is remembered across restarts until sign-out; refreshing it is optional. Choose a model from the standard noneditable list and select Use this translation engine to make OpenAI the active provider. ChatGPT mode hides the API-key manager because no API key is needed.
 
 Official Codex app-server manages login, cancellation, account information and token refresh. **Translation uses an undocumented ChatGPT/Codex HTTPS endpoint**, not a stable public third-party OAuth translation API. It may stop working after a service change. The API-key mode is the stable alternative. Authentication uses normal account permissions and Codex/ChatGPT limits; this does not bypass billing or account restrictions. API and ChatGPT model catalogs may differ.
 
 No agent thread is started to translate text, and no model-controlled filesystem, shell, browser or tool execution is enabled. The prompt is translation data, not a computer instruction. OAuth storage is isolated under `TranslateAdvanced/codex` inside the NVDA configuration directory. It does not reuse or log out your separate development Codex account. Protect this directory, especially for portable NVDA; the add-on package does not contain accounts or keys.
+
+The add-on requests the ChatGPT hosted sign-in success page and identifies its client as TranslateAdvanced. OpenAI still controls the consent screen and may display Codex there.
 
 Save in the OpenAI dialog applies immediately, independently of the parent Options dialog. Cancel discards pending preferences, not completed account actions. Log in, Cancel login and Log out are explicit independent account actions. The dialog pauses live translation while open so its status messages are not sent back to a translator.
 
@@ -52,7 +54,7 @@ The automated suite substitutes unavailable NVDA boundaries and tests routing, e
 
 ## Original feature reference
 
-The original English manual is preserved below, including author information and the reference for other features. It describes the earlier release; the 2026.3 instructions and limits above take precedence where behavior has changed.
+The original English manual is preserved below, including author information and the reference for other features. It describes the earlier release; the 2026.4 instructions and limits above take precedence where behavior has changed.
 
 # User Manual: Advanced Translator for NVDA
 

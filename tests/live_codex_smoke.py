@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--auth-file',required=True)
     parser.add_argument('--output',required=True)
     parser.add_argument('--long',action='store_true')
+    parser.add_argument('--model', default='auto')
     parser.add_argument('--probe-events',action='store_true',help='Record stream event structure without credentials or input text.')
     parser.add_argument('--probe-response',action='store_true',help='Record safe response structure on unexpected content types; do not use for pass/fail.')
     args=parser.parse_args()
@@ -98,8 +99,8 @@ def main():
                 models=client.list_models();report['models']=models
                 assert models
                 report['auto_model']=codex.responses.select_model('auto',models)
-                samples=[('Siema, jak się czujesz?','auto'),('Hello, how are you?','auto')]
-                if 'gpt-6-astra' in models:
+                samples=[('Siema, jak się czujesz?',args.model),('Hello, how are you?',args.model)]
+                if args.model == 'auto' and 'gpt-6-astra' in models:
                     samples.extend([('Zapraszam do gry!','gpt-6-astra'),('Come join the game!','gpt-6-astra')])
                 if args.long:samples=[(('To jest długi tekst testowy. Zawiera wiele podobnych zdań.\n')*90,'auto')]
                 for text,model in samples:

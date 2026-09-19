@@ -198,8 +198,8 @@ class ConfigDialog(wx.Dialog):
 		sizer.Add(self.openai_button, 0, wx.ALL, 10)
 
 		# Listbox para mostrar las claves API
-		apilabel = wx.StaticText(panel, label=_("&Gestor de APIS:"))
-		sizer.Add(apilabel, 0, wx.ALL, 10)
+		self.api_label = wx.StaticText(panel, label=_("&Gestor de APIS:"))
+		sizer.Add(self.api_label, 0, wx.ALL, 10)
 
 		self.api_listbox = wx.ListBox(panel)
 		sizer.Add(self.api_listbox, 1, wx.EXPAND | wx.ALL, 10)
@@ -220,7 +220,7 @@ class ConfigDialog(wx.Dialog):
 
 		panel.SetSizer(sizer)
 
-		self.api_controls = (self.api_listbox, self.add_button, self.edit_button, self.delete_button, self.default_button)
+		self.api_controls = (self.api_label, self.api_listbox, self.add_button, self.edit_button, self.delete_button, self.default_button)
 		self.show_api_controls(False)
 
 		return panel
@@ -315,12 +315,16 @@ class ConfigDialog(wx.Dialog):
 
 		:param event: Evento de selección.
 		"""
-		if event.GetString() not in self.frame.gestor_settings.service_map:
+		choice = self.translator_choice.GetStringSelection() if event is None else event.GetString()
+		if choice not in self.frame.gestor_settings.service_map:
 			self.show_api_controls(False)
 			self.actualizar_aceleradores(False)
 			return
-		choice = event.GetString()
 		self.selected_service = self.frame.gestor_settings.service_map.get(choice)
+		if self.selected_service == "openai" and self.frame.gestor_settings.openai_auth_mode == "chatgpt":
+			self.show_api_controls(False)
+			self.actualizar_aceleradores(False)
+			return
 		if self.selected_service:
 			self.show_api_controls(True)
 			self.actualizar_aceleradores(True)
@@ -336,6 +340,9 @@ class ConfigDialog(wx.Dialog):
 			dialog.ShowModal()
 		finally:
 			dialog.Destroy()
+		if dialog.use_selected_provider:
+			self.select_choice_by_value(self.frame.gestor_settings.choiceOnline)
+		self.on_translator_choice(None)
 		self.openai_button.SetFocus()
 
 	def GetSelectionChoice(self):
@@ -428,6 +435,11 @@ class ConfigDialog(wx.Dialog):
 		Inicializa la configuración del traductor online del diálogo.
 		"""
 		self.select_choice_by_value(self.frame.gestor_settings.choiceOnline)
+		if self.frame.gestor_settings.choiceOnline == 9 and self.frame.gestor_settings.openai_auth_mode == "chatgpt":
+			self.selected_service = "openai"
+			self.show_api_controls(False)
+			self.actualizar_aceleradores(False)
+			return
 		if self.frame.gestor_settings.choiceOnline in [4, 5, 6, 9]:
 			choice = self.translator_choice.GetStringSelection()
 			self.selected_service = self.frame.gestor_settings.service_map.get(choice)

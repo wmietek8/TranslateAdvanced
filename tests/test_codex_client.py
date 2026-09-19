@@ -252,7 +252,7 @@ class CodexClientTests(unittest.TestCase):
         self.assertGreaterEqual(len(reads), 2)
         self.assertTrue(all(m["params"] == {"refreshToken": False} for m in reads))
 
-    def test_catalog_cache_expires_and_does_not_cross_accounts(self):
+    def test_catalog_cache_survives_time_but_does_not_cross_accounts(self):
         client = self.client()
         with patch.object(responses, "needs_refresh", return_value=False), patch.object(responses, "translate_response", return_value="Translated"):
             with patch.object(codex.time, "monotonic", return_value=1.0):
@@ -261,7 +261,7 @@ class CodexClientTests(unittest.TestCase):
                 client.translate("Two", "pl")
                 self.account_value = {"type": "chatgpt", "email": "other@example.test"}
                 client.translate("Three", "pl")
-        self.assertEqual(3, self.methods().count("model/list"))
+        self.assertEqual(2, self.methods().count("model/list"))
 
     def test_failed_cli_refresh_never_uses_stale_access_token(self):
         with patch.object(responses, "needs_refresh", return_value=True), patch.object(responses, "translate_response") as request:
@@ -276,6 +276,81 @@ class CodexClientTests(unittest.TestCase):
         self.assertEqual("chatgpt", message["params"]["type"])
         self.assertNotIn("accessToken", message["params"])
         self.assertNotIn("apiKey", message["params"])
+        self.assertTrue(message["params"]["useHostedLoginSuccessPage"])
+        self.assertEqual("chatgpt", message["params"]["appBrand"])
+
+    def test_model_catalog_survives_client_restart(self):
+        """Katalog zostaje w profilu i nie wymaga ponownego pobierania."""
+        first = self.client()
+        self.assertEqual(["gpt-5-mini"], first.list_models())
+        first.close()
+        second = self.client()
+        self.assertEqual(["gpt-5-mini"], second.cached_models())
+        self.assertEqual(1, self.methods().count("model/list"))
+
+    def test_logout_removes_persistent_model_catalog(self):
+        """Wylogowanie usuwa modele, a następne konto pobiera własną listę."""
+        client = self.client()
+        client.list_models()
+        cache = self.home / "translateadvanced-models.json"
+        self.assertTrue(cache.exists())
+        client.logout()
+        self.assertFalse(cache.exists())
+
+    def test_corrupted_model_cache_is_replaced_by_full_catalog(self):
+        """Niepełny zapis katalogu nie może blokować tłumaczenia."""
+        client = self.client()
+        client.list_models()
+        client.close()
+        (self.home / "translateadvanced-models.json").write_text("{", encoding="utf-8")
+        self.assertEqual(["gpt-5-mini"], self.client().cached_models())
+        self.assertEqual(2, self.methods().count("model/list"))
+
+    def test_disk_catalog_is_rejected_for_another_account(self):
+        """Nowe konto nie dziedziczy modeli poprzedniego konta."""
+        client = self.client()
+        client.list_models()
+        client.close()
+        self.account_value = {"type": "chatgpt", "email": "different@example.test"}
+        self.client().cached_models()
+        self.assertEqual(2, self.methods().count("model/list"))
+
+    def test_cache_write_failure_does_not_break_live_model_list(self):
+        """Brak prawa zapisu nie zmienia poprawnego wyniku sieciowego."""
+        with patch.object(codex.os, "replace", side_effect=PermissionError()):
+            self.assertEqual(["gpt-5-mini"], self.client().list_models())
+        self.assertFalse(list(self.home.glob(".models-*.tmp")))
+
+    def test_signed_out_account_cannot_use_cached_models(self):
+        """Pozostały plik katalogu nie jest dowodem zalogowania."""
+        client = self.client()
+        client.list_models()
+        self.account_value = None
+        with self.assertRaises(codex.CodexError):
+            client.cached_models()
+        self.assertFalse((self.home / "translateadvanced-models.json").exists())
+
+    def test_token_rotation_keeps_catalog_but_account_change_invalidates_it(self):
+        """Odświeżenie tokenu nie jest zmianą konta ani listy modeli."""
+        client = self.client()
+        client._prepare_home()
+        auth = {"auth_mode": "chatgpt", "tokens": {
+            "access_token": "private-test-access", "account_id": "private-test-account",
+        }}
+        path = self.home / "auth.json"
+        path.write_text(json.dumps(auth), encoding="utf-8")
+        client.list_models()
+        cached = (self.home / "translateadvanced-models.json").read_text(encoding="utf-8")
+        self.assertNotIn("private-test", cached)
+        self.assertNotIn("test@example", cached)
+        auth["tokens"]["access_token"] = "rotated-test-access"
+        path.write_text(json.dumps(auth), encoding="utf-8")
+        client.cached_models()
+        self.assertEqual(1, self.methods().count("model/list"))
+        auth["tokens"]["account_id"] = "different-test-account"
+        path.write_text(json.dumps(auth), encoding="utf-8")
+        client.cached_models()
+        self.assertEqual(2, self.methods().count("model/list"))
 
     def test_login_url_must_be_official_https_without_userinfo(self):
         for url in ("http://auth.openai.com/", "https://auth.openai.com.evil.invalid/", "https://user@auth.openai.com/", "file:///private", "javascript:alert(1)"):
