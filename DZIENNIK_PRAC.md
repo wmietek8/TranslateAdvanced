@@ -80,3 +80,5 @@
 - SCons zbudował paczkę 2026.5: 913891 bajtów, 106 elementów, 48 plików Pythona zgodnych ze źródłami i poprawnych składniowo. Audyt pomocy, polskiego katalogu, GPL i autora zaliczony. Paczka oraz 179 plików źródłowych nie zawierają żadnej z czterech kontrolowanych wartości sekretów.
 - SHA-256: `071c458f3f5518f7ab3c9454f9c19f35b9510356c1b34e68b7e03385a20e1815`.
 - Zaktualizowano lokalną instalację: 13 nowych lub zmienionych plików, wszystkie 106 plików paczki identyczne z wydaniem. Kopia 2026.4: `%LOCALAPPDATA%\TranslateAdvanced\backups\20260919-194034-532098\TranslateAdvanced-2026.4`. Konfiguracja, klucze i logowanie pozostały identyczne; restart NVDA pozostawiono użytkownikowi.
+- Commit `2f7442cc8ca46b9e9e35b224ce1a566a1b8fe0cd` wypchnięto na `origin/master`. Opublikowano [wydanie 2026.5](https://github.com/wmietek8/TranslateAdvanced/releases/tag/2026.5) z paczką i sumą SHA-256; tag wskazuje ten sam commit.
+- Paczkę i sumę pobrano niezależnie z GitHuba do osobnego katalogu. Skrót jest identyczny ze sprawdzonym i lokalnie zainstalowanym artefaktem. Publikacja nie wymaga ręcznej instalacji przez użytkownika na tym komputerze: wystarczy jego restart NVDA.
