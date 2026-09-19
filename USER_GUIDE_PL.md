@@ -1,10 +1,10 @@
-# TranslateAdvanced 2026.6: konto ChatGPT, modele i tłumaczenie w locie
+# TranslateAdvanced 2026.7: konto ChatGPT, modele i tłumaczenie w locie
 
 To społecznościowy fork dodatku autorstwa Héctora J. Beníteza Corredera (hxebolax), rozwijany przez Axela (wmietek8). Oryginalne autorstwo i licencja GNU GPL v2 pozostają zachowane. Kod źródłowy: https://github.com/wmietek8/TranslateAdvanced. Szczegóły zmian są w `MODIFICATIONS.md`.
 
 ## Instalacja bez tracenia obecnych ustawień
 
-Otwórz paczkę `TranslateAdvanced-2026.6.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
+Otwórz paczkę `TranslateAdvanced-2026.7.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
 
 Sama paczka nie zawiera kluczy API ani zalogowanego konta. Przekazanie jej znajomym nie przekazuje dostępu do Twoich usług. Każdy konfiguruje swoje konto lub swój klucz.
 
@@ -66,6 +66,12 @@ Nazwa integracji przekazywana przez dodatek to **TranslateAdvanced**, ale **klie
 
 ### Czas tłumaczenia w locie
 
+W 2026.7 tłumaczenie przez OpenAI i DeepL API nie zatrzymuje głównego wątku NVDA: można dalej używać klawiatury i przerywać mowę. Odpowiedzi zachowują kolejność, a anulowane komunikaty nie wracają po spóźnionej odpowiedzi serwera. Identyczne oczekujące teksty korzystają z jednego zapytania. Przy włączonej pamięci tłumaczeń powtórzone menu jest odczytywane bez czekania na sieć. Stare wersje NVDA bez powiadomienia `pre_speechCanceled` zachowują wcześniejszą obsługę synchroniczną.
+
+**Do dynamicznej gry, np. Life in Nature, wybierz DeepL Pro w głównych ustawieniach dodatku i pozostaw włączoną pamięć tłumaczeń.** W wykonanej próbie sześciu krótkich tekstów DeepL potrzebował 0,27–0,44 s, a Terra przez doładowany klucz API 1,11–1,44 s. To pomiar syntetycznych komunikatów menu, zadania i serwera, bez odsłuchu rzeczywistej gry. Samo doładowanie API nie gwarantuje szybkości DeepL. OpenAI nadal może służyć do tłumaczenia tekstów, przy których takie oczekiwanie jest akceptowalne. Wyboru silnika dokonujesz w ustawieniach; aktualizacja nie przełącza go automatycznie.
+
+Dla Terry także ustawiono brak dodatkowego rozumowania. Seria wiadomości ma maksymalnie 32 oczekujące wypowiedzi; po przekroczeniu limitu dodatku NVDA odczyta oryginały w kolejności i zgłosi przeciążenie. Ta ochrona zapobiega nieograniczonej kolejce, ale nie przyspiesza samej usługi.
+
 Od wersji 2026.5 sąsiednie fragmenty tekstu w jednej wypowiedzi NVDA są łączone w jedno żądanie OpenAI, do 3000 znaków. Komendy zmiany języka, głosu i indeksu pozostają granicami grup, a zapamiętane tłumaczenia są używane ponownie. Nie łączymy osobnych wypowiedzi ani tekstu z różnych aplikacji. Dla `gpt-5.6-sol`, aliasu `gpt-5.6` oraz Luny wyłączone jest dodatkowe rozumowanie.
 
 W próbie trzech etykiet interfejsu poprzednia wersja wysyłała trzy kolejne żądania i potrzebowała 8,55 sekundy. Po poprawce Sol wysyłał jedno żądanie, z wynikami 1,70–3,93 sekundy w trzech powtórzeniach. Luna nie uzyskała wyraźnej przewagi. To pomiar kilku krótkich tekstów, nie gwarancja czasu odpowiedzi. Szybkie łącze nie usuwa oczekiwania na usługę; przy nawigacji wymagającej natychmiastowej reakcji sprawdzający się u użytkownika DeepL może być praktyczniejszy. Model i silnik wybrane przez użytkownika nie są automatycznie zmieniane.
@@ -85,7 +91,7 @@ Model nie dostaje dostępu do plików, terminala, przeglądarki ani narzędzi ag
 - Po błędzie API 401, 403 lub 429 przez minutę nie są ponawiane automatyczne próby tłumaczenia kolejnych wypowiedzi. Zapisane przekłady pozostają dostępne, a pozostały tekst jest odczytywany od razu w oryginale. Zmiana klucza, modelu lub metody pozwala spróbować natychmiast. Przerwa dotyczy także przejścia do innej aplikacji. Ręczne polecenia tłumaczenia nadal wykonują jawną próbę.
 - Powtarzające się pozostałe błędy są ograniczone do jednego powiadomienia na pół minuty; treść prywatnych wyjątków nie jest odczytywana.
 - Wynik identyczny z oryginałem nie jest ogłaszany jako udane tłumaczenie schowka. Może oznaczać już właściwy język, nazwę własną albo odpowiedź, której model nie zmienił.
-- Tłumaczenie schowka odbywa się poza głównym wątkiem NVDA. Tłumaczenie każdej wypowiedzi w locie nadal zależy od szybkości wybranej usługi; duży model OpenAI może wprowadzać zauważalne opóźnienia.
+- Tłumaczenie schowka oraz mowy OpenAI i DeepL API odbywa się poza głównym wątkiem obsługiwanego NVDA. Początek odczytu nowego tłumaczenia nadal zależy od szybkości wybranej usługi; duży model OpenAI może wprowadzać zauważalne opóźnienia.
 - Po ręcznej aktualizacji plików dodatku konieczne jest ponowne uruchomienie NVDA. Testy poza procesem NVDA nie oznaczają, że uruchomiona już instancja załadowała nową wersję.
 
 ## Źródła techniczne

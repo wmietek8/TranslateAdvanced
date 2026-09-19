@@ -1,5 +1,13 @@
 # Modified version: attribution and change record
 
+## Wersja 2026.7 — 19 września 2026
+
+- Tłumaczenie mowy przez OpenAI i DeepL API odbywa się poza głównym wątkiem NVDA. Sterowanie wraca od razu, a odpowiedzi trafiają do mowy, historii i pamięci w głównym wątku, w kolejności wiadomości.
+- Przerwanie mowy unieważnia oczekujące wyniki. Zmiana aplikacji, silnika, języka, modelu lub konta API nie pozwala odczytać spóźnionego przekładu w innym kontekście. Zamknięcie dodatku nie czeka na serwer.
+- Identyczne oczekujące żądania korzystają z jednego tłumaczenia. Kolejka ma maksymalnie 32 wypowiedzi i dwa wątki; po przeciążeniu wszystkie oczekujące oryginały są odczytywane w kolejności. Nie dochodzi do ukrytego przełączania dostawcy. Starszy NVDA bez `pre_speechCanceled` zachowuje dotychczasową drogę synchroniczną.
+- Terra otrzymuje udokumentowane `reasoning.effort=none`, tak jak Sol i Luna. Nie zmieniono wybranego modelu ani silnika. Test uproszczenia odpowiedzi API nie wykazał stałej przewagi, dlatego pozostawiono walidowaną odpowiedź ze schematem.
+- Dodano testy kolejki, serii wiadomości, anulowania, przeciążenia, zamykania, starszego NVDA i narzędzia pomiarowego. Rzeczywisty doładowany klucz API działa. Pomiar na syntetycznych komunikatach gry wskazał 1,11–1,44 s dla Terry API i 0,27–0,44 s dla DeepL Pro; nie jest to gwarancja czasu odpowiedzi w każdej grze.
+
 ## Wersja 2026.6 — 19 września 2026
 
 - Konto ChatGPT można skonfigurować bez ręcznej instalacji Codexa. Pierwsze logowanie pobiera w tle przypiętą wersję oficjalnego komponentu, jeżeli brakuje dostępnej kopii. Archiwum i program mają sprawdzane rozmiary oraz SHA-256; częściowy program nie jest uruchamiany.

@@ -19,6 +19,7 @@ import re
 import os
 import time
 import hashlib
+from collections.abc import Callable
 # Carga personal
 from ..src_translations.src_google_original import TranslatorGoogle
 from ..src_translations.src_google_alternative import TranslatorGooglealternative
@@ -33,6 +34,7 @@ from ..src_translations.src_detect import DetectorDeIdioma
 from ..managers.managers_dict import LanguageDictionary
 from ..utils.utils_short_translation import postprocess_short_translation
 from ..utils.utils_speech import group_adjacent_text
+from ..utils.utils_speech_queue import SpeechQueue
 
 # Carga traducción
 addonHandler.initTranslation()
@@ -314,9 +316,7 @@ class GestorTranslate(
 		retry_key = None
 		try:
 			options = self.translation_options()
-			key = options.get("key")
-			fingerprint = hashlib.sha256(key.encode("utf-8", errors="replace")).digest() if isinstance(key, str) else b""
-			retry_key = (options.get("provider"), options.get("auth_mode"), options.get("model"), fingerprint, options.get("codex_path"))
+			retry_key = self._retry_identity(options)
 			retry = getattr(self, "_realtime_retry", None)
 			if retry and retry[0] == retry_key and time.monotonic() < retry[1]:
 				return text
@@ -351,6 +351,107 @@ class GestorTranslate(
 		if callable(speak):
 			speak(speechSequence=[message], priority=None)
 
+	def enable_speech_queue(self, dispatch: Callable[[Callable[[], None]], None]) -> None:
+		"""Włącza pracę w tle z przekazywaniem wyników do wątku NVDA."""
+		self.close_speech_queue()
+		self._speech_queue = SpeechQueue(dispatch)
+		self._speech_context = None
+
+	def cancel_pending_speech(self) -> None:
+		"""Przerywa oczekujące tłumaczenia razem z przerwaniem mowy NVDA."""
+		queue = getattr(self, "_speech_queue", None)
+		if queue is not None:
+			queue.cancel()
+
+	def close_speech_queue(self) -> None:
+		"""Zamyka pracę w tle przy wyłączaniu lub przeładowaniu dodatku."""
+		queue = getattr(self, "_speech_queue", None)
+		if queue is not None:
+			queue.close()
+		self._speech_queue = None
+
+	@staticmethod
+	def _retry_identity(options: dict) -> tuple:
+		key = options.get("key")
+		fingerprint = hashlib.sha256(key.encode("utf-8", errors="replace")).digest() if isinstance(key, str) else b""
+		return (options.get("provider"), options.get("auth_mode"), options.get("model"), fingerprint, options.get("codex_path"))
+
+	def _speech_identity(self, options: dict) -> tuple:
+		return (self.get_cache_app_name(), self._retry_identity(options),
+			options.get("target"), options.get("source"), options.get("alternate"))
+
+	def _speak_queued(self, sequence: list, priority: Spri) -> None:
+		settings = self.frame.gestor_settings
+		queue = self._speech_queue
+		try:
+			options = self.translation_options()
+			identity = self._speech_identity(options)
+			if identity != self._speech_context:
+				queue.cancel()
+				self._speech_context = identity
+			cache = settings._translationCache.get(identity[0], {}) if settings.chkCache else {}
+			prepared = {}
+			for item in sequence:
+				if isinstance(item, str):
+					text = self.remove_surrogates(item)
+					known = cache.get(text)
+					prepared[text] = known if known and known != text else (text if not text.strip() else None)
+			retry = getattr(self, "_realtime_retry", None)
+			paused = retry and retry[0] == identity[1] and time.monotonic() < retry[1]
+			if paused:
+				prepared = {text: value if value is not None else text for text, value in prepared.items()}
+		except Exception as error:
+			queue.flush(error)
+			settings._nvdaSpeak(speechSequence=sequence, priority=priority)
+			return
+
+		cancel_event = queue.cancel_event
+
+		def translate() -> dict[str, str]:
+			# Wszystkie dane wejściowe pochodzą ze zrzutu z głównego wątku.
+			result = {}
+			for text, value in prepared.items():
+				if cancel_event.is_set():
+					raise InterruptedError("Anulowano oczekującą wypowiedź.")
+				result[text] = value if value is not None else self.translate_with_options(text, options)
+			return result
+
+		def deliver(result: dict | None, error: Exception | None) -> None:
+			try:
+				if (not settings._enableTranslation or getattr(self.frame, "_terminating", False)
+						or identity != self._speech_identity(self.translation_options())):
+					return
+				if error is not None:
+					if isinstance(error, TranslationError) and error.retry_after:
+						self._realtime_retry = (identity[1], time.monotonic() + error.retry_after)
+					self._report_realtime_error(error, identity[0])
+					settings._nvdaSpeak(speechSequence=sequence, priority=priority)
+					if isinstance(error, TranslationError) and error.retry_after and queue.pending:
+						queue.flush(error)
+					return
+				translated = [result[self.remove_surrogates(item)] if isinstance(item, str) else item for item in sequence]
+				settings._nvdaSpeak(speechSequence=translated, priority=priority)
+				if settings.chkCache:
+					cache = settings._translationCache.setdefault(identity[0], {})
+					cache.update({text: value for text, value in result.items() if text != value})
+				if translated != sequence:
+					entry = self.procesar_listas(sequence, translated)
+					self.record_translation(entry["origen"], entry["destino"])
+				self._realtime_error_notice = None
+			except Exception:
+				# Nie wypisujemy treści mowy, kluczy ani wyjątków zależności.
+				logHandler.log.error("TranslateAdvanced: nie udało się przekazać wyniku mowy.")
+
+		if not queue.pending and all(value is not None for value in prepared.values()):
+			deliver(prepared, None)
+			return
+		key = (identity, tuple(prepared))
+		if not queue.submit(key, translate, deliver):
+			# Przeciążenie nie usuwa komunikatów gry: odczytujemy oryginały w kolejności.
+			error = TranslationError("Za dużo oczekujących tłumaczeń. Odczytano oryginalne komunikaty.")
+			queue.flush(error)
+			deliver(None, error)
+
 	def speak(self, speechSequence: SpeechSequence, priority: Spri = None):
 		"""
 		Genera una secuencia de habla y la traduce si es necesario.
@@ -360,6 +461,7 @@ class GestorTranslate(
 		:return: None
 		"""
 		if not self.frame.gestor_settings._enableTranslation:
+			self.cancel_pending_speech()
 			self._realtime_retry = None
 			self._realtime_error_notice = None
 			return self.frame.gestor_settings._nvdaSpeak(speechSequence=speechSequence, priority=priority)
@@ -369,6 +471,11 @@ class GestorTranslate(
 			# Osobne żądanie dla każdej etykiety sumowało opóźnienia modelu.
 			cached = settings._translationCache.get(self.get_cache_app_name(), {}) if settings.chkCache else None
 			speechSequence = group_adjacent_text(speechSequence, cached=cached)
+
+		if getattr(self, "_speech_queue", None) is not None:
+			if settings.choiceOnline in (4, 5, 9):
+				return self._speak_queued(list(speechSequence), priority)
+			self.cancel_pending_speech()
 
 		newSpeechSequence = []
 		newSpeechSequenceOrigen = []

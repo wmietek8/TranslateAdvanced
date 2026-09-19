@@ -1,11 +1,13 @@
-﻿# TranslateAdvanced 2026.6 — sprawdzenia i ograniczenia
+﻿# TranslateAdvanced 2026.7 — sprawdzenia i ograniczenia
 
 Sprawdzenia wykonano na Windows 19 września 2026. Dokument opisuje wyniki prób, bez gwarancji bezbłędnego działania zewnętrznych usług w przyszłości.
 
 ## Testy automatyczne
 
-- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **499 testów oraz 148 podtestów zaliczonych**, bez pominięć.
-- Python 3.11: **498 testów oraz 148 podtestów zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
+Regresje 2026.7 obejmują nieblokującą kolejkę, serię wiadomości, zachowanie kolejności i komend, wspólne żądania, natychmiastową pamięć, opóźnione odpowiedzi, przerwanie w trakcie kilku fragmentów, zmianę kontekstu, limit kolejki, zamkniętą pętlę zdarzeń oraz zgodność ze starszym NVDA. Szybki wynik zawsze czeka na przekazanie przez dispatch; test wyeliminował zależność anulowania od kolejności wykonywania wątków.
+
+- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **532 testy oraz 150 podtestów zaliczonych**, bez pominięć.
+- Python 3.11: **531 testów oraz 150 podtestów zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
 - Regresje 2026.6 obejmują integralność i limity rozmiarów pobierania, przekierowania HTTPS, odrzucanie dowiązań i nieoczekiwanych elementów ZIP, anulowanie także w kolejce, ponawianie po awarii, ponowne użycie komponentu, rozpoznawanie architektury, pierwszeństwo ręcznej ścieżki, zamykanie okna, skróty klawiaturowe oraz brak dodatkowych żądań po odmowie API. Sprawdzono granice czasu przerwy i reset po zmianie klucza, modelu lub metody.
 - Nowe regresje 2026.5 odtworzyły osobne żądania dla sąsiednich fragmentów wypowiedzi oraz brak parametru rozumowania Sola. Sprawdzono puste dane, białe znaki, tożsamość i kolejność komend, pamięć, granice 3000 znaków, błędne typy, awarię usługi i niezmienioną drogę innych silników.
 - Osiem nowych testów przed zmianami odtworzyło zgłoszone błędy. Następnie rozszerzono zestaw o migrację zapisanej sesji, anulowanie, spóźnione odpowiedzi, ponowne otwieranie, awarię katalogu, zmianę konta, odświeżenie tokenu, zapis katalogu i wybór silnika w oknie nadrzędnym.
@@ -20,9 +22,26 @@ uv run --no-project --python 3.11 --with pytest --with polib python -X utf8 -B -
 uv run --no-project --python 3.13 --with pytest --with wxPython python -X utf8 -B tests/live_openai_ui_smoke.py
 ```
 
-Pokrycie wykonywalnych linii w przebiegu 2026.6: instalator komponentu 95,9%, okno OpenAI 94,0%, klient Codex 89,7%, adapter API 97,5%, menedżer tłumaczeń 83,8%. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
+Pokrycie kolejki w przebiegu 2026.7: 100.0%, menedżera tłumaczeń: 87.1%. Historyczne pokrycie pozostałych modułów w 2026.6: instalator komponentu 95,9%, okno OpenAI 94,0%, klient Codex 89,7%, adapter API 97,5%, menedżer tłumaczeń 83,8%. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
 
 Kontrola Ruff dla importów i niezdefiniowanych nazw obejmuje instalator komponentu, nowe testy i próbę API oraz moduł grupowania. Nie ogłaszamy całego odziedziczonego projektu jako wolnego od wszystkich ostrzeżeń stylistycznych. Kontrola różnic Git sprawdza również białe znaki.
+
+## Rzeczywiste próby 2026.7
+
+Doładowany klucz API poprawnie wykonał próbę starej drogi: 1,602 / 2,076 / 1,827 s na trzech tekstach PL↔EN i interfejsie. Osobno porównano trzy komunikaty gry na Terrze i DeepL, przeplatając dostawców i warianty żądania. Uproszczenie schematu do tekstu nie miało stałej przewagi, dlatego nie włączono tej zmiany.
+
+Końcowy `tests/live_game_latency.py` wykonuje prawdziwe HTTPS przez rzeczywisty menedżer, kolejkę i natywne wxPython. Próba ma trzy syntetyczne teksty (menu, zadanie, wiadomość serwera), każdy dwa razy z pustą pamięcią, oraz trzy następujące po sobie wiadomości. Każdy wynik jest sprawdzany także z pamięci.
+
+| Usługa | Najkrótszy czas | Mediana 6 prób | Najdłuższy czas | Cała seria 3 wiadomości | Oddanie sterowania NVDA | Powtórka z pamięci |
+| --- | --- | --- | --- | --- | --- | --- |
+| OpenAI API, gpt-5.6-terra | 1,112 s | 1,229 s | 1,435 s | 2,075 s | 0,030–0,473 ms | 0,068–0,137 ms |
+| DeepL Pro | 0,265 s | 0,391 s | 0,442 s | 0,795 s | 0,025–0,510 ms | 0,066–0,119 ms |
+
+Czas tłumaczenia jest mierzony do przekazania wyniku na granicy mowy, bez czasu syntezatora. Oddanie sterowania nie oznacza gotowego tłumaczenia. Próby wykonano kolejno, na tym samym komputerze; mała seria nie gwarantuje czasów w innych warunkach. Test potwierdził główny wątek odbioru, kolejność i kompletność serii, tożsamość komendy NVDA, białe znaki, historię i niezmieniony plik kluczy.
+
+Osobna próba ChatGPT przez OAuth, z parametrem Terry `none`, zakończyła się trzema poprawnymi przekładami (2,885 / 2,354 / 1,238 s), zapisem pamięci i zachowaniem katalogu. Wykorzystano izolowaną kopię dostępu bez odświeżania; oryginalne konto nie zmieniło się. Te teksty różnią się od serii gry, więc nie tworzą bezpośredniego rankingu z powyższą tabelą.
+
+Odtworzenie pomiaru na Windows: `uv run --no-project --python 3.13 --with wxPython python -X utf8 -B tests/live_game_latency.py --api-file <apis.json> --provider 9 --model gpt-5.6-terra --output <raport.json>`. Dla DeepL Pro użyj `--provider 5`. Narzędzie wysyła wyłącznie wbudowane próbki i nie zmienia ustawień, schowka ani instalacji NVDA.
 
 ## Rzeczywiste próby 2026.6
 
@@ -61,9 +80,9 @@ Sprawdzono komendę NVDA, białe znaki, historię oraz ponowny odczyt katalogu b
 - Nie przeprowadzono pełnego nowego logowania użytkownika przez przeglądarkę. Sprawdzenie startu/anulowania oraz istniejącego dostępu nie zastępuje takiej próby.
 - `appBrand=chatgpt` wybiera oficjalną stronę powitalną ChatGPT. Ekran zgody, klient OAuth i ewentualna konfiguracja organizacji nadal należą do OpenAI/Codexa; nie obiecujemy usunięcia nazwy Codex z każdego ekranu.
 - Tryb konta korzysta z eksperymentalnego, nieudokumentowanego publicznie transportu tłumaczeń ChatGPT/Codex. Oficjalny app-server obsługuje konto i modele; tłumacz nie uruchamia wątku agenta ani narzędzi modelu. Dokumentacja: https://learn.chatgpt.com/docs/app-server.
-- Nie potwierdzono udanego tłumaczenia na rzeczywistym kluczu API: próba została odrzucona z przyczyny rozliczeniowej. Droga poprawnej odpowiedzi, kierunki, pamięć i grupowanie mają testy z kontrolowaną granicą HTTPS. Nie wykonywano nowych rzeczywistych prób wszystkich pozostałych dostawców.
+- Po doładowaniu potwierdzono udane tłumaczenia rzeczywistego API oraz DeepL Pro. Nie wykonywano nowych rzeczywistych prób wszystkich pozostałych dostawców.
 - Rzeczywisty komponent uruchomiono na Windows x64. Dobór wersji ARM64 i scenariusza 32-bitowego NVDA na 64-bitowym Windows sprawdzono w testach logiki; nie deklarujemy prób na fizycznym urządzeniu ARM64 lub w natywnym procesie x86.
-- Tłumaczenie w locie nadal czeka na zewnętrzną usługę. Grupowanie nie łączy tekstów rozdzielonych komendami NVDA ani osobnych wypowiedzi; może więc pozostać kilka żądań. Nie wdrożono asynchronicznej przebudowy mowy ani gwarancji szybkości DeepL.
+- Pierwszy odczyt tłumaczenia nadal zależy od czasu usługi. Kolejka 2026.7 usuwa blokowanie głównego wątku NVDA dla OpenAI i DeepL API, lecz nie gwarantuje szybszego wygenerowania tekstu. Komendy i osobne wypowiedzi pozostają rozdzielone. Starszy NVDA bez pre_speechCanceled korzysta z dotychczasowej drogi synchronicznej. Próby nie obejmują odsłuchu ani sterowania rzeczywistą grą Life in Nature.
 - Dla Sola i aliasu `gpt-5.6` ustawiono udokumentowane `reasoning.effort=none`: https://developers.openai.com/api/docs/models/gpt-5.6-sol. W realnej próbie usługa przyjęła ten parametr. Nie narzucamy go nieznanym modelom bez potwierdzenia obsługi.
 
 ## Paczka i publikacja

@@ -3072,3 +3072,6 @@ msgstr "Nie udało się zapisać poprawnego komponentu."
 #: globalPlugins/TranslateAdvanced/app/utils/utils_codex_runtime.py:240
 msgid "Program w archiwum przekracza dozwolony rozmiar."
 msgstr "Program w archiwum przekracza dozwolony rozmiar."
+
+msgid "Za dużo oczekujących tłumaczeń. Odczytano oryginalne komunikaty."
+msgstr "Za dużo oczekujących tłumaczeń. Odczytano oryginalne komunikaty."

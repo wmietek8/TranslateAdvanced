@@ -998,7 +998,7 @@ class CodexResponseTests(unittest.TestCase):
 
     def test_sol_translation_disables_unnecessary_reasoning(self) -> None:
         """Sol i jego alias nie uruchamiają domyślnego rozumowania."""
-        for model in ('gpt-5.6-sol', 'gpt-5.6'):
+        for model in ('gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6'):
             with self.subTest(model=model):
                 self.response = FakeHttpResponse(sse(completed()))
                 self.translate(model=model)

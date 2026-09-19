@@ -333,7 +333,7 @@ def translate_response(codex_home, text, target_language, alternate_language=Non
         "tools": [], "tool_choice": "none", "parallel_tool_calls": False,
         "store": False, "stream": True,
     }
-    if model in ("gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6"):
+    if model in ("gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol", "gpt-5.6"):
         payload["reasoning"] = {"effort": "none"}
     connection = None
     response = None

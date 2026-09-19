@@ -110,7 +110,7 @@ class OpenAIAPITests(unittest.TestCase):
     def test_sol_translation_uses_no_reasoning_and_keeps_exact_model(self) -> None:
         """Klucz API ma tę samą optymalizację Sola co konto ChatGPT."""
         backend = load_backend()
-        for model in ('gpt-5.6-sol', 'gpt-5.6'):
+        for model in ('gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6'):
             with self.subTest(model=model):
                 with mock.patch.object(backend, '_urlopen', return_value=http_response(completed_response('Hola'))) as transport:
                     backend.TranslatorOpenAI().translate_openai('test-only-key', 'Hello', model=model)

@@ -7,9 +7,9 @@
 > original copyright notices and is distributed under GNU GPL v2. See
 > `COPYING.txt` and `MODIFICATIONS.md`.
 
-## Aktualizacja 2026.6
+## Aktualizacja 2026.7
 
-Logowanie kontem ChatGPT samodzielnie przygotowuje potrzebny komponent, bez ręcznej instalacji Codexa. Pobieranie ma postęp, anulowanie i kontrolę SHA-256; kolejne logowania używają zapisanej kopii. Ręczna ścieżka jest schowana w ustawieniach zaawansowanych. Błędy braku środków API mają jasny komunikat, a minuta przerwy po odmowie zapobiega opóźnianiu każdej kolejnej wypowiedzi. Szczegóły i rzeczywiste próby: [instrukcja po polsku](USER_GUIDE_PL.md), [instrukcja po angielsku](USER_GUIDE_EN.md), [wykonane sprawdzenia](VALIDATION.md) i [dziennik zmian](DZIENNIK_PRAC.md). Obie instrukcje są dołączone do pomocy dodatku.
+Tłumaczenie w locie przez OpenAI i DeepL API działa w tle i nie zatrzymuje obsługi NVDA podczas oczekiwania na serwer. Zachowuje kolejność komunikatów gry, przerywanie mowy i natychmiastowy odczyt z pamięci. Terra ma wyłączone zbędne rozumowanie. Rzeczywiste próby pokazują przewagę DeepL przy krótkich komunikatach; dodatek sam nie zmienia wybranego dostawcy. Starszy NVDA bez powiadomienia o początku anulowania zachowuje dotychczasową obsługę. Szczegóły i wyniki: [instrukcja po polsku](USER_GUIDE_PL.md), [instrukcja po angielsku](USER_GUIDE_EN.md), [wykonane sprawdzenia](VALIDATION.md) i [dziennik zmian](DZIENNIK_PRAC.md). Obie instrukcje są dołączone do pomocy dodatku.
 
 <h2 id="indice">Índice</h2>
 

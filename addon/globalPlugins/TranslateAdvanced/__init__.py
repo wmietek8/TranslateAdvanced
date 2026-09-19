@@ -116,6 +116,7 @@ Error:
 		self.gestor_lang = TraductorIdiomas(self)
 		# Carga el gestor de traducción y todo lo necesario
 		self.gestor_translate = GestorTranslate(self)
+		self._initialize_speech_queue()
 		self.gestor_settings._nvdaSpeak = speech._manager.speak
 		self.gestor_settings._nvdaGetPropertiesSpeech = speech.getPropertiesSpeech
 		speech._manager.speak = self.gestor_translate.speak
@@ -151,6 +152,15 @@ _("""Traductor Avanzado iniciado con errores.""")
 
 		self._update(self.update)
 
+	def _initialize_speech_queue(self) -> None:
+		"""Włącza kolejkę, gdy NVDA zgłasza anulowanie także przed rozpoczęciem mowy."""
+		from speech import extensions
+		hook = getattr(extensions, "pre_speechCanceled", None)
+		if hook is not None:
+			self.gestor_translate.enable_speech_queue(wx.CallAfter)
+			hook.register(self.gestor_translate.cancel_pending_speech)
+			self._speech_cancel_hook = hook
+
 	def terminate(self):
 		"""
 		Finaliza el complemento y guarda la configuración.
@@ -158,6 +168,12 @@ _("""Traductor Avanzado iniciado con errores.""")
 		if getattr(self, "_terminating", False):
 			return
 		self._terminating = True
+		manager = getattr(self, "gestor_translate", None)
+		if manager is not None:
+			hook = getattr(self, "_speech_cancel_hook", None)
+			if hook is not None:
+				hook.unregister(manager.cancel_pending_speech)
+			manager.close_speech_queue()
 		self._cancel_clipboard_translation()
 		for dialog in tuple(getattr(self, "_translation_dialogs", ())):
 			dialog.on_cancel(None)
