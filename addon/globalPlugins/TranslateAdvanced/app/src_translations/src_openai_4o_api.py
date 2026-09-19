@@ -437,7 +437,7 @@ class TranslatorOpenAI:
                                 "strict": True, "schema": schema}},
             "max_output_tokens": 16384,
         }
-        if model == "gpt-5.6-luna":
+        if model in ("gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6"):
             body["reasoning"] = {"effort": "none"}
         translation = _translation_result(_request_json(api_key, "responses", body))
         detected = translation["detected_source_language"]

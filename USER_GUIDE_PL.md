@@ -1,10 +1,10 @@
-# TranslateAdvanced 2026.4: konto ChatGPT, modele i tłumaczenie w locie
+# TranslateAdvanced 2026.5: konto ChatGPT, modele i tłumaczenie w locie
 
 To społecznościowy fork dodatku autorstwa Héctora J. Beníteza Corredera (hxebolax), rozwijany przez Axela (wmietek8). Oryginalne autorstwo i licencja GNU GPL v2 pozostają zachowane. Kod źródłowy: https://github.com/wmietek8/TranslateAdvanced. Szczegóły zmian są w `MODIFICATIONS.md`.
 
 ## Instalacja bez tracenia obecnych ustawień
 
-Otwórz paczkę `TranslateAdvanced-2026.4.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
+Otwórz paczkę `TranslateAdvanced-2026.5.nvda-addon` i potwierdź aktualizację w NVDA. Uruchom NVDA ponownie dopiero po zakończeniu instalacji. Nie musisz usuwać starego dodatku, istniejących kluczy DeepL ani konfiguracji.
 
 Sama paczka nie zawiera kluczy API ani zalogowanego konta. Przekazanie jej znajomym nie przekazuje dostępu do Twoich usług. Każdy konfiguruje swoje konto lub swój klucz.
 
@@ -60,7 +60,13 @@ Domyślne **auto** wybiera dostępny model z zalecanej listy. Dla API pierwszą 
 
 Samo pomyślne logowanie od razu zapisuje metodę ChatGPT i ścieżkę programu obsługującego logowanie. Jeśli wersja 2026.3 zachowała konto, lecz nie zapisała tej metody, aktualizacja rozpoznaje lokalną sesję dodatku przy braku wybranego klucza OpenAI. Nie zmienia przy tym wyboru innych silników.
 
-Dodatek przedstawia się jako **TranslateAdvanced** i prosi oficjalny mechanizm logowania o stronę powitalną **ChatGPT**. Sam proces nadal korzysta z klienta OAuth Codexa; treści ekranu zgody oraz sytuacji wymagających konfiguracji organizacji nie ustala dodatek. Nie wszystkie ekrany OpenAI muszą więc wyświetlać nazwę dodatku.
+Nazwa integracji przekazywana przez dodatek to **TranslateAdvanced**, ale **klient OAuth nadal należy do Codexa**. Parametr `appBrand=chatgpt` wybiera jedynie stronę powitalną ChatGPT po zalogowaniu; nie rejestruje wtyczki jako osobnej aplikacji i nie zmienia tożsamości na ekranie zgody. Ten mechanizm dopuszcza tylko marki `codex` i `chatgpt`, nie dowolną nazwę. Własna tożsamość OAuth wymagałaby osobnej rejestracji po stronie OpenAI; w sprawdzonej publicznej dokumentacji nie znaleziono ścieżki rejestracji dowolnej wtyczki z dostępem do abonamentu ChatGPT. Dokumentacja: https://learn.chatgpt.com/docs/app-server.
+
+### Czas tłumaczenia w locie
+
+Od wersji 2026.5 sąsiednie fragmenty tekstu w jednej wypowiedzi NVDA są łączone w jedno żądanie OpenAI, do 3000 znaków. Komendy zmiany języka, głosu i indeksu pozostają granicami grup, a zapamiętane tłumaczenia są używane ponownie. Nie łączymy osobnych wypowiedzi ani tekstu z różnych aplikacji. Dla `gpt-5.6-sol`, aliasu `gpt-5.6` oraz Luny wyłączone jest dodatkowe rozumowanie.
+
+W próbie trzech etykiet interfejsu poprzednia wersja wysyłała trzy kolejne żądania i potrzebowała 8,55 sekundy. Po poprawce Sol wysyłał jedno żądanie, z wynikami 1,70–3,93 sekundy w trzech powtórzeniach. Luna nie uzyskała wyraźnej przewagi. To pomiar kilku krótkich tekstów, nie gwarancja czasu odpowiedzi. Szybkie łącze nie usuwa oczekiwania na usługę; przy nawigacji wymagającej natychmiastowej reakcji sprawdzający się u użytkownika DeepL może być praktyczniejszy. Model i silnik wybrane przez użytkownika nie są automatycznie zmieniane.
 
 Logowanie do dodatku jest oddzielone od zwykłej konfiguracji programistycznego Codexa. Dane sesji trafiają do `TranslateAdvanced/codex` w katalogu konfiguracji NVDA, nie do katalogu instalacyjnego dodatku. Wylogowanie dotyczy tej osobnej sesji. Chroń katalog konfiguracji, szczególnie przy przenośnej instalacji NVDA; może zawierać klucze i dane logowania. Nie wysyłaj go znajomym razem z dodatkiem.
 

@@ -1,11 +1,12 @@
-﻿# TranslateAdvanced 2026.4 — sprawdzenia i ograniczenia
+﻿# TranslateAdvanced 2026.5 — sprawdzenia i ograniczenia
 
 Sprawdzenia wykonano na Windows 19 września 2026. Dokument opisuje wyniki prób, bez gwarancji bezbłędnego działania zewnętrznych usług w przyszłości.
 
 ## Testy automatyczne
 
-- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **376 testów oraz 144 podtesty zaliczone**, bez pominięć.
-- Python 3.11: pełny przebieg przed ostatnim dodatkowym testem — **374 testy oraz 144 podtesty zaliczone, jeden pominięty**. Po dodaniu ostatniego testu ponownie sprawdzono cały plik ustawień: **57 zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
+- Python 3.13.15 i natywne wxPython 4.3.1 / wxWidgets 3.3.3: **408 testów oraz 148 podtestów zaliczonych**, bez pominięć.
+- Python 3.11: **407 testów oraz 148 podtestów zaliczonych, jeden pominięty**. Pominięty test wymaga natywnego wxPython i został wykonany w przebiegu 3.13.
+- Nowe regresje 2026.5 odtworzyły osobne żądania dla sąsiednich fragmentów wypowiedzi oraz brak parametru rozumowania Sola. Sprawdzono puste dane, białe znaki, tożsamość i kolejność komend, pamięć, granice 3000 znaków, błędne typy, awarię usługi i niezmienioną drogę innych silników.
 - Osiem nowych testów przed zmianami odtworzyło zgłoszone błędy. Następnie rozszerzono zestaw o migrację zapisanej sesji, anulowanie, spóźnione odpowiedzi, ponowne otwieranie, awarię katalogu, zmianę konta, odświeżenie tokenu, zapis katalogu i wybór silnika w oknie nadrzędnym.
 - Testy uruchamiają kod dodatku; podmienione są granice NVDA, procesów zewnętrznych i sieci. Testy automatyczne nie czytają rzeczywistych danych konta ani schowka.
 - Zachowano regresje dotyczące schowka, kierunku tłumaczenia, formatowania, długiego tekstu, kompletności odpowiedzi, TLS, przekierowań i innych silników.
@@ -18,11 +19,24 @@ uv run --no-project --python 3.11 --with pytest --with polib python -X utf8 -B -
 uv run --no-project --python 3.13 --with pytest --with wxPython python -X utf8 -B tests/live_openai_ui_smoke.py
 ```
 
-Zmierzono pokrycie wykonywalnych linii dla 375 testów poprzedzających ostatni dodatkowy przypadek zapisu metody logowania: okno OpenAI 94,2%, klient Codex 89,5%, transport odpowiedzi OAuth 90,3%, menedżer tłumaczeń 81,8%. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
+W wersji 2026.4 zmierzono pokrycie wykonywalnych linii dla 375 testów: okno OpenAI 94,2%, klient Codex 89,5%, transport odpowiedzi OAuth 90,3%, menedżer tłumaczeń 81,8%. Nie jest to nowy pomiar dla 2026.5. Pokrycie linii nie zastępuje prób rzeczywistej usługi ani sprawdzenia obsługi przez użytkownika.
 
-Kontrola importów i niezdefiniowanych nazw obejmuje zmieniane moduły okna/klienta oraz nową próbę mowy; `_` jest dostarczane przez NVDA. Nie ogłaszamy całego odziedziczonego projektu jako wolnego od wszystkich ostrzeżeń stylistycznych. Kontrola różnic Git sprawdza również białe znaki.
+Kontrola Ruff dla importów i niezdefiniowanych nazw obejmuje nowy moduł grupowania, jego testy oraz zmienioną próbę mowy. Nie ogłaszamy całego odziedziczonego projektu jako wolnego od wszystkich ostrzeżeń stylistycznych. Kontrola różnic Git sprawdza również białe znaki.
 
-## Rzeczywiste próby
+## Rzeczywiste pomiary 2026.5
+
+Wykonano 18 tłumaczeń przez rzeczywiste konto dodatku: po dziewięć na Solu i Lunie, z syntetycznymi tekstami PL→EN, EN→PL i trzema etykietami jednej wypowiedzi. Każda próba startowała bez zapamiętanego tłumaczenia, a jej powtórzenie potwierdzało brak dodatkowego żądania HTTPS. Katalog przygotowano przed pomiarem mowy; trwało to odpowiednio 0,530 i 0,885 sekundy.
+
+| Model | Najkrótszy czas | Mediana 9 prób | Najdłuższy czas | Trzy fragmenty jednej wypowiedzi |
+| --- | --- | --- | --- | --- |
+| gpt-5.6-sol | 1,588 s | 1,790 s | 3,930 s | 1,698 / 2,289 / 3,930 s |
+| gpt-5.6-luna | 1,370 s | 1,885 s | 3,955 s | 2,418 / 2,268 / 3,955 s |
+
+W próbie starego kodu ta sama trzyczęściowa wypowiedź zajęła 8,546 sekundy przy trzech kolejnych żądaniach. Samo wymuszenie braku rozumowania, bez łączenia tekstu, dało 6,167 sekundy. Nowa droga wysyła jedno żądanie. To mała próba, bez podstaw do ogólnego rankingu modeli lub obietnicy stałego czasu. Luna nie miała wyraźnej przewagi.
+
+Sprawdzono komendę NVDA, białe znaki, historię oraz ponowny odczyt katalogu bez `model/list`. Próby użyły kopii samego dostępu, bez tokenu odświeżania. Oryginalne logowanie nie zmieniło się, a rzeczywisty schowek i proces NVDA nie były używane do pomiarów. Odtworzenie: `tests/live_realtime_oauth.py --auth-file <plik-konta-dodatku> --output <raport.json> --model gpt-5.6-sol --repetitions 3`.
+
+## Dodatkowe próby wykonane dla 2026.4
 
 - `live_codex_smoke.py`: tłumaczenia PL↔EN z wyborem `auto`, `gpt-6-astra` oraz jawnie wskazanym `gpt-5.6-sol`. Każdy wynik był niepusty i różnił się od tekstu źródłowego.
 - `live_realtime_oauth.py`: rzeczywista droga `GestorTranslate.speak` → wybrany model OAuth → tekst przekazany do granicy mowy NVDA. PL→EN i EN→PL dla `gpt-5.6-sol`; zachowane komendy mowy oraz odstępy. Ponowna wypowiedź użyła pamięci tłumaczeń. Ponownie utworzony klient odzyskał katalog z dysku bez ponownego `model/list`.
@@ -38,7 +52,8 @@ Kontrola importów i niezdefiniowanych nazw obejmuje zmieniane moduły okna/klie
 - `appBrand=chatgpt` wybiera oficjalną stronę powitalną ChatGPT. Ekran zgody, klient OAuth i ewentualna konfiguracja organizacji nadal należą do OpenAI/Codexa; nie obiecujemy usunięcia nazwy Codex z każdego ekranu.
 - Tryb konta korzysta z eksperymentalnego, nieudokumentowanego publicznie transportu tłumaczeń ChatGPT/Codex. Oficjalny app-server obsługuje konto i modele; tłumacz nie uruchamia wątku agenta ani narzędzi modelu. Dokumentacja: https://learn.chatgpt.com/docs/app-server.
 - Nie wykonywano nowych płatnych wywołań kluczem API OpenAI ani rzeczywistych prób wszystkich pozostałych dostawców. Zachowano ich testy deterministyczne.
-- Tłumaczenie w locie nadal czeka na zewnętrzny model. W końcowej próbie dwóch zdań `gpt-5.6-sol` potrzebował 2,747 i 2,927 sekundy na pierwsze tłumaczenie. Czas i jakość zależą od usługi, modelu i tekstu.
+- Tłumaczenie w locie nadal czeka na zewnętrzną usługę. Grupowanie nie łączy tekstów rozdzielonych komendami NVDA ani osobnych wypowiedzi; może więc pozostać kilka żądań. Nie wdrożono asynchronicznej przebudowy mowy ani gwarancji szybkości DeepL.
+- Dla Sola i aliasu `gpt-5.6` ustawiono udokumentowane `reasoning.effort=none`: https://developers.openai.com/api/docs/models/gpt-5.6-sol. W realnej próbie usługa przyjęła ten parametr. Nie narzucamy go nieznanym modelom bez potwierdzenia obsługi.
 
 ## Paczka i publikacja
 

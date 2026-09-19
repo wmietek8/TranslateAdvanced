@@ -64,3 +64,19 @@
 - Podmieniono 19 plików i usunięto 47 plików pamięci podręcznej Pythona. Po zakończeniu wszystkie 105 plików instalacji należących do paczki są identyczne z wydaniem 2026.4. Lokalny AGENTS.md pozostaje dodatkowym plikiem instrukcji.
 - Porównanie skrótów przed i po operacji potwierdziło zachowanie konfiguracji NVDA, pliku kluczy API i logowania ChatGPT. Raport podmiany zapisano obok kopii; nie zawiera wartości kluczy ani tokenów.
 - NVDA nie został zamknięty ani zrestartowany. Nowe pliki są gotowe; użytkownik uruchamia NVDA ponownie, aby je załadować. Ta operacja nie zmienia wcześniej opublikowanej paczki ani jej sumy SHA-256.
+
+## Skrócenie oczekiwania na mowę — wersja 2026.5
+
+- Użytkownik zgłosił 7–8 sekund oczekiwania przy tłumaczeniu w locie i ponownie zapytał o tożsamość aplikacji przy OAuth. Potwierdzono zapisany wybór ChatGPT i `gpt-5.6-sol` bez odczytywania prywatnych tekstów użytkownika.
+- Dokumentacja OpenAI potwierdza obsługę `reasoning.effort=none` przez Sola. W kodzie opcja była ustawiana tylko dla Luny. Ponadto `speak` wysyłał kolejne żądanie dla każdego tekstowego elementu wypowiedzi.
+- Pomiar starego kodu na syntetycznych etykietach odtworzył 8,546 sekundy przy trzech żądaniach; samo wyłączenie rozumowania dało 6,167 sekundy. Czas zawiera transport i obsługę po stronie usługi.
+- Testy regresji najpierw wykazały brak grupowania i parametru Sola. Dodano liniowy algorytm łączenia sąsiednich tekstów, z granicami komend, białych znaków, zapamiętanych fragmentów i 3000 znaków. Inne silniki zachowują dotychczasową drogę.
+- Dodano brak rozumowania dla Sola i aliasu `gpt-5.6` w obu metodach uwierzytelniania; wybór modelu i silnika pozostaje zachowany.
+- Rozszerzono próbę mowy o liczenie HTTPS, trzy fragmenty i powtórzenia. Pierwsza seria ujawniła błędne założenie skryptu o zerowaniu historii. Poprawiono przygotowanie niezależnych prób i zamykanie klienta przed sprzątaniem katalogu, również po nieudanej asercji.
+- Wykonano po dziewięć udanych tłumaczeń Sol/Luna i ich powtórzenia z pamięci. Mediany: Sol 1,790 s, Luna 1,885 s. Dla trzech etykiet Sol potrzebował 1,698 / 2,289 / 3,930 s i zawsze jednego żądania. Pełne zakresy i ograniczenia są w VALIDATION.md. Nie wykazano wyraźnej przewagi Luny; nie zmieniono modelu użytkownika.
+- Python 3.13 z wxPython: 408 testów i 148 podtestów zaliczonych. Python 3.11: 407 testów i 148 podtestów zaliczonych, jeden test wx pominięty. Ruff nowych plików i próby mowy zaliczony. Przygotowano wydanie 2026.5.
+- Doprecyzowano OAuth: `clientInfo` identyfikuje integrację, a `appBrand` wybiera stronę końcową; żaden nie nadaje osobnej tożsamości klienta OAuth NVDA. W sprawdzonej publicznej dokumentacji nie znaleziono rejestracji takiego klienta dla dostępu abonamentowego.
+- Dwie wczesne próby pozostawiły lokalne bazy pomocniczego Codexa po kolizji zamykania i sprzątania. Ich pliki `auth.json` zostały usunięte przez sprzątanie próby. Automatyczna kontrola odrzuciła usunięcie katalogu oraz ograniczone usunięcie zweryfikowanych plików, podając tylko `blocked by policy`. Pozostałości zostawiono w katalogach Temp `ta-latency-jpb_tj5z` i `ta-realtime-0z9cslup`; nie trafiają do repozytorium ani paczki.
+- SCons zbudował paczkę 2026.5: 913891 bajtów, 106 elementów, 48 plików Pythona zgodnych ze źródłami i poprawnych składniowo. Audyt pomocy, polskiego katalogu, GPL i autora zaliczony. Paczka oraz 179 plików źródłowych nie zawierają żadnej z czterech kontrolowanych wartości sekretów.
+- SHA-256: `071c458f3f5518f7ab3c9454f9c19f35b9510356c1b34e68b7e03385a20e1815`.
+- Zaktualizowano lokalną instalację: 13 nowych lub zmienionych plików, wszystkie 106 plików paczki identyczne z wydaniem. Kopia 2026.4: `%LOCALAPPDATA%\TranslateAdvanced\backups\20260919-194034-532098\TranslateAdvanced-2026.4`. Konfiguracja, klucze i logowanie pozostały identyczne; restart NVDA pozostawiono użytkownikowi.

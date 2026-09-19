@@ -7,9 +7,9 @@
 > original copyright notices and is distributed under GNU GPL v2. See
 > `COPYING.txt` and `MODIFICATIONS.md`.
 
-## Aktualizacja 2026.4
+## Aktualizacja 2026.5
 
-Poprawiono rozpoznawanie konta ChatGPT, automatyczne pobieranie i zapamiętywanie modeli, dostępność listy modeli oraz wybór silnika bez klucza API. Logowanie prosi o stronę powitalną ChatGPT. Szczegóły: [instrukcja po polsku](USER_GUIDE_PL.md), [instrukcja po angielsku](USER_GUIDE_EN.md), [wykonane sprawdzenia](VALIDATION.md) i [dziennik zmian](DZIENNIK_PRAC.md). Obie instrukcje są dołączone do pomocy dodatku.
+Skrócono oczekiwanie na tłumaczenie OpenAI przez łączenie sąsiednich fragmentów jednej wypowiedzi NVDA i wyłączenie dodatkowego rozumowania Sola. Zachowano komendy NVDA i pamięć tłumaczeń. Doprecyzowano, że strona powitalna ChatGPT nie zmienia klienta OAuth Codexa w osobną aplikację. Szczegóły i rzeczywiste pomiary: [instrukcja po polsku](USER_GUIDE_PL.md), [instrukcja po angielsku](USER_GUIDE_EN.md), [wykonane sprawdzenia](VALIDATION.md) i [dziennik zmian](DZIENNIK_PRAC.md). Obie instrukcje są dołączone do pomocy dodatku.
 
 <h2 id="indice">Índice</h2>
 

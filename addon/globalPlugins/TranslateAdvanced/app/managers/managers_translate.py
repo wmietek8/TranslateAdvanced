@@ -31,6 +31,7 @@ from ..src_translations.src_openai_4o_api import TranslationError, TranslatorOpe
 from ..src_translations.src_detect import DetectorDeIdioma
 from ..managers.managers_dict import LanguageDictionary
 from ..utils.utils_short_translation import postprocess_short_translation
+from ..utils.utils_speech import group_adjacent_text
 
 # Carga traducción
 addonHandler.initTranslation()
@@ -345,6 +346,12 @@ class GestorTranslate(
 		"""
 		if not self.frame.gestor_settings._enableTranslation:
 			return self.frame.gestor_settings._nvdaSpeak(speechSequence=speechSequence, priority=priority)
+
+		settings = self.frame.gestor_settings
+		if settings.choiceOnline == 9:
+			# Osobne żądanie dla każdej etykiety sumowało opóźnienia modelu.
+			cached = settings._translationCache.get(self.get_cache_app_name(), {}) if settings.chkCache else None
+			speechSequence = group_adjacent_text(speechSequence, cached=cached)
 
 		newSpeechSequence = []
 		newSpeechSequenceOrigen = []

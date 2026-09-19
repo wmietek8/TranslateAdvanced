@@ -1,4 +1,4 @@
-# TranslateAdvanced 2026.4
+# TranslateAdvanced 2026.5
 
 Community fork of TranslateAdvanced by Héctor J. Benítez Corredera (hxebolax), maintained by Axel (wmietek8). Original notices and GNU GPL v2 remain intact. This is not an official upstream release. See `COPYING.txt` and `MODIFICATIONS.md`. Source: https://github.com/wmietek8/TranslateAdvanced.
 
@@ -6,7 +6,7 @@ For detailed Polish instructions, see the Polish add-on help or `USER_GUIDE_PL.m
 
 ## Clipboard translation
 
-Install `TranslateAdvanced-2026.4.nvda-addon` as an update and restart NVDA when prompted. Existing provider choices and API keys are retained.
+Install `TranslateAdvanced-2026.5.nvda-addon` as an update and restart NVDA when prompted. Existing provider choices and API keys are retained.
 
 Select DeepL API Free/Pro or OpenAI, enable automatic language switching, and choose the existing primary and alternate languages. With Polish as primary and English as alternate, NVDA+Shift+C translates Polish into English and other detected languages into Polish. Disabling automatic switching uses the selected provider's normal target language.
 

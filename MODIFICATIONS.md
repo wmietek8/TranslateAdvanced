@@ -1,5 +1,13 @@
 # Modified version: attribution and change record
 
+## Wersja 2026.5 — 19 września 2026
+
+- Sąsiednie fragmenty jednej wypowiedzi NVDA są tłumaczone przez OpenAI jako jedna grupa do 3000 znaków. Komendy NVDA, białe znaki i zapamiętane tłumaczenia zachowują swoje granice; inne silniki nie zmieniają drogi mowy.
+- Sol i jego alias otrzymują `reasoning.effort=none` w trybie ChatGPT i klucza API. Jawnie wybrany model pozostaje niezmieniony.
+- Pomiar rzeczywistej usługi odtworzył 8,55 sekundy oczekiwania przy trzech żądaniach. Po poprawce ta sama wypowiedź wymaga jednego żądania; pełne wyniki i ograniczenia są w VALIDATION.md.
+- Instrukcja wyjaśnia różnicę między nazwą integracji, wyglądem strony powitalnej a klientem OAuth Codexa.
+- Rozszerzono testy grupowania, zachowania komend, pamięci i błędów oraz powtarzalną próbę rzeczywistego tłumaczenia.
+
 ## Wersja 2026.4 — 19 września 2026
 
 - Potwierdzenie konta ChatGPT w tle po otwarciu ustawień i odpowiednie przyciski logowania lub wylogowania.

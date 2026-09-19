@@ -946,6 +946,19 @@ class CodexResponseTests(unittest.TestCase):
         self.translate(model='gpt-5.6-luna')
         self.assertEqual({'effort':'none'},self.requests[-1][2]['reasoning'])
 
+    def test_sol_translation_disables_unnecessary_reasoning(self) -> None:
+        """Sol i jego alias nie uruchamiają domyślnego rozumowania."""
+        for model in ('gpt-5.6-sol', 'gpt-5.6'):
+            with self.subTest(model=model):
+                self.response = FakeHttpResponse(sse(completed()))
+                self.translate(model=model)
+                self.assertEqual({'effort': 'none'}, self.requests[-1][2].get('reasoning'))
+
+    def test_unknown_reasoning_support_does_not_add_parameter(self) -> None:
+        """Nie narzucamy parametru modelom bez potwierdzonej obsługi."""
+        self.translate(model='gpt-5-mini')
+        self.assertNotIn('reasoning', self.requests[-1][2])
+
     def test_auto_prefers_available_luna_from_current_live_catalog(self):
         available = ['gpt-6-astra','gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna','gpt-5.5']
         self.assertEqual('gpt-5.6-luna',responses.select_model('auto',available))
